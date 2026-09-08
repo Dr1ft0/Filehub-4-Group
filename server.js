@@ -13,12 +13,20 @@
  */
 import { createServer } from 'node:http'
 import { randomUUID } from 'node:crypto'
+import { writeFileSync, rmSync } from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { config } from './src/config.js'
 import { buildApp } from './src/app.js'
 import { AuthService } from './src/modules/auth/auth.service.js'
 import { FileRepo } from './src/modules/files/files.repo.js'
 import { getDb, closeDb } from './src/utils/sqlite.js'
 import { logger } from './src/utils/logger.js'
+
+// 项目根目录（用于 PID 文件定位）
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const ROOT = path.resolve(__dirname, '.')
+const PID_FILE = path.join(ROOT, 'data', 'server.pid')
 
 // 初始化 SQLite 数据库（建表）
 getDb()
@@ -39,6 +47,12 @@ const server = createServer((req, res) => app.handle(req, res))
 
 // 启动监听
 server.listen(config.port, config.host, () => {
+  // 写入 PID 文件，供 stop.bat 精确定位进程
+  try {
+    writeFileSync(PID_FILE, String(process.pid), 'utf8')
+  } catch (err) {
+    logger.warn(`写入 PID 文件失败: ${err.message}`)
+  }
   console.log('==============================================')
   console.log('  脚本仙人  小组脚本共享系统')
   console.log(`  服务地址:  http://${config.host}:${config.port}`)
@@ -53,6 +67,12 @@ function shutdown() {
   console.log('\n正在关闭服务...')
   server.close(() => {
     closeDb() // 关闭数据库
+    // 清理 PID 文件
+    try {
+      rmSync(PID_FILE, { force: true })
+    } catch (err) {
+      logger.warn(`清理 PID 文件失败: ${err.message}`)
+    }
     console.log('服务已安全关闭')
     process.exit(0)
   })
