@@ -64,6 +64,16 @@
   .chk { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
   .chk input { width: auto; margin: 0; }
   .chk label { margin: 0; }
+  .share-users { max-height: 200px; overflow-y: auto; border: 1px solid #334155; border-radius: 8px; padding: 6px; margin-bottom: 10px; background: #0f172a; }
+  .share-users::-webkit-scrollbar { width: 8px; }
+  .share-users::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+  .share-users::-webkit-scrollbar-track { background: transparent; }
+  .share-user { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 6px; cursor: pointer; color: #e2e8f0; font-size: 13px; transition: background .15s; }
+  .share-user:hover { background: #1e293b; }
+  .share-user input[type=checkbox] { width: 16px; height: 16px; margin: 0; flex: 0 0 auto; accent-color: #2563eb; cursor: pointer; }
+  .share-user .su-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .share-user .su-role { flex: 0 0 auto; font-size: 11px; color: #94a3b8; }
+  .share-user .su-role.admin { color: #fca5a5; }
 </style>
 </head>
 <body>
@@ -211,7 +221,7 @@
       <label for="sharePublic">设为小组公共文件（所有人可见）</label>
     </div>
     <label>共享给指定成员</label>
-    <div id="shareUsers" style="max-height:180px;overflow-y:auto;border:1px solid #334155;border-radius:6px;padding:8px;margin-bottom:10px"></div>
+    <div id="shareUsers" class="share-users"></div>
     <div class="muted" style="margin-bottom:10px">勾选要共享的成员。公共文件 + 指定共享可同时生效。</div>
     <div class="actions">
       <button class="secondary" onclick="closeModal('shareModal')">取消</button>
@@ -667,10 +677,14 @@ async function openShare(id, name, sharedWithJson, isPublic) {
     users.forEach((u) => {
       if (u.username === currentUser.username) return // 不显示自己
       const checked = sharedWith.includes(u.username) ? 'checked' : ''
-      const roleTag = u.role === 'admin' ? '（管理员）' : ''
+      const roleCls = u.role === 'admin' ? 'admin' : ''
+      const roleTag = u.role === 'admin' ? '管理员' : '成员'
       const label = document.createElement('label')
-      label.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer;color:#e2e8f0'
-      label.innerHTML = '<input type="checkbox" value="' + escapeAttr(u.username) + '" ' + checked + '> ' + escapeHtml(u.username) + roleTag
+      label.className = 'share-user'
+      label.innerHTML =
+        '<input type="checkbox" value="' + escapeAttr(u.username) + '" ' + checked + '>' +
+        '<span class="su-name">' + escapeHtml(u.username) + '</span>' +
+        '<span class="su-role ' + roleCls + '">' + roleTag + '</span>'
       container.appendChild(label)
     })
   } catch (e) {
