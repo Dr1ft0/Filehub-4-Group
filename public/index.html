@@ -658,7 +658,7 @@ async function openShare(id, name, sharedWithJson, isPublic) {
   container.innerHTML = '<div class="muted">加载成员中...</div>'
   openModal('shareModal')
   try {
-    const users = await api('/api/users')
+    const users = await api('/users')
     container.innerHTML = ''
     if (users.length === 0) {
       container.innerHTML = '<div class="muted">暂无其他成员</div>'
