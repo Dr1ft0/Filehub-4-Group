@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>脚本仙人</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+  .container { max-width: 1000px; margin: 0 auto; padding: 30px 20px; }
+  h1 { font-size: 24px; margin-bottom: 6px; }
+  .sub { color: #94a3b8; font-size: 13px; margin-bottom: 24px; }
+  .card { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+  .card h2 { font-size: 16px; margin-bottom: 14px; color: #93c5fd; }
+  label { font-size: 13px; color: #94a3b8; display: block; margin-bottom: 4px; }
+  input, textarea, select { width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: #e2e8f0; margin-bottom: 10px; font-size: 13px; }
+  textarea { min-height: 70px; font-family: monospace; resize: vertical; }
+  button { padding: 8px 14px; border: none; border-radius: 6px; background: #2563eb; color: #fff; cursor: pointer; font-size: 13px; }
+  button:hover { background: #1d4ed8; }
+  button.secondary { background: #475569; } button.secondary:hover { background: #64748b; }
+  button.ghost { background: transparent; border: 1px solid #475569; color: #94a3b8; }
+  button.ghost:hover { background: #334155; color: #e2e8f0; }
+  button.small { padding: 3px 8px; font-size: 12px; }
+  .row { display: flex; gap: 10px; }
+  .row > * { flex: 1; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid #334155; vertical-align: middle; }
+  th { color: #94a3b8; font-weight: 500; }
+  .desc-cell { color: #cbd5e1; max-width: 260px; word-break: break-all; }
+  .link { color: #60a5fa; cursor: pointer; text-decoration: underline; margin-right: 8px; }
+  .danger { color: #f87171; cursor: pointer; text-decoration: underline; }
+  .alert { padding: 10px 12px; border-radius: 6px; font-size: 13px; margin-bottom: 16px; display: none; }
+  .alert.error { background: rgba(248,113,113,.15); color: #fca5a5; }
+  .alert.ok { background: rgba(52,211,153,.15); color: #6ee7b7; }
+  #loginView .card { text-align: left; }
+  .filebadge { background: #334155; padding: 2px 8px; border-radius: 10px; font-size: 11px; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .tab { padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; border: 1px solid #475569; color: #94a3b8; background: transparent; }
+  .tab.active { background: #2563eb; color: #fff; border-color: #2563eb; }
+  .pagination { display: flex; align-items: center; gap: 10px; margin-top: 14px; font-size: 13px; color: #94a3b8; }
+  .pagination button { padding: 4px 10px; font-size: 12px; }
+  .userinfo { color: #94a3b8; font-size: 12px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+  .tag { display: inline-block; padding: 1px 7px; border-radius: 8px; font-size: 11px; margin-left: 4px; }
+  .tag.public { background: rgba(52,211,153,.2); color: #6ee7b7; }
+  .tag.shared { background: rgba(96,165,250,.2); color: #60a5fa; }
+  .tag.owner { background: rgba(251,191,36,.2); color: #fbbf24; }
+  .tag.admin { background: rgba(248,113,113,.2); color: #fca5a5; }
+  .tag.disabled { background: rgba(148,163,184,.2); color: #94a3b8; }
+  .modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: none; align-items: center; justify-content: center; z-index: 100; }
+  .modal { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 20px; width: 90%; max-width: 560px; max-height: 85vh; overflow-y: auto; }
+  .modal h3 { margin-bottom: 14px; color: #93c5fd; font-size: 16px; }
+  .modal .actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
+  .searchbar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; align-items: center; }
+  .searchbar input { margin-bottom: 0; }
+  .searchbar button { flex: 0 0 auto; }
+  .searchbar .search-input { flex: 1 1 200px; min-width: 150px; }
+  .searchbar select { flex: 0 0 auto; }
+  .filter-row { display: flex; gap: 8px; align-items: center; }
+  .filter-row select { flex: 1 1 0; min-width: 0; }
+  .preview { background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 12px; font-family: monospace; font-size: 12px; white-space: pre-wrap; word-break: break-all; max-height: 300px; overflow-y: auto; color: #a5f3fc; }
+  .muted { color: #64748b; font-size: 12px; }
+  .version-item { padding: 8px 0; border-bottom: 1px solid #334155; font-size: 13px; }
+  .version-item:last-child { border-bottom: none; }
+  .chk { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .chk input { width: auto; margin: 0; }
+  .chk label { margin: 0; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>📁 脚本仙人</h1>
+  <div class="sub" id="sub">小组脚本共享 · 版本管理 · 简介搜索 · 排序</div>
+
+  <div class="alert" id="alert"></div>
+
+  <!-- 登录视图 -->
+  <div id="loginView">
+    <div class="tabs">
+      <button class="tab active" id="tabLogin" onclick="switchTab('login')">登录</button>
+      <button class="tab" id="tabRegister" onclick="switchTab('register')">注册</button>
+    </div>
+
+    <div class="card" id="loginForm">
+      <h2>登录</h2>
+      <label>用户名</label>
+      <input id="username" placeholder="请输入用户名" />
+      <label>密码</label>
+      <input id="password" type="password" placeholder="请输入密码" />
+      <button onclick="login()">登录</button>
+    </div>
+
+    <div class="card" id="registerForm" style="display:none">
+      <h2>注册新账号</h2>
+      <label>用户名（3-32 位，字母/数字/下划线）</label>
+      <input id="regUsername" placeholder="如 zhangsan" />
+      <label>密码（至少 6 位）</label>
+      <input id="regPassword" type="password" placeholder="请输入密码" />
+      <button onclick="register()">注册</button>
+    </div>
+  </div>
+
+  <!-- 主视图 -->
+  <div id="appView" style="display:none">
+    <div class="userinfo">
+      <span id="userInfo"></span>
+      <span>
+        <button class="ghost small" id="adminBtn" style="display:none" onclick="openAdmin()">👥 用户管理</button>
+        <button class="ghost small" onclick="logout()">退出登录</button>
+      </span>
+    </div>
+
+    <!-- 上传 -->
+    <div class="card">
+      <h2>上传文件</h2>
+      <div id="fileUpload">
+        <label>选择文件（任意类型，上限 5MB）</label>
+        <input type="file" id="fileInput" />
+        <label>简介（可选）</label>
+        <input id="fileDesc" placeholder="一句话说明这个文件的用途" />
+        <div style="margin-top:10px">
+          <button onclick="uploadFile()">上传文件</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 文件列表 -->
+    <div class="card">
+      <h2>文件列表 <span class="filebadge" id="count">0</span></h2>
+      <div class="searchbar">
+        <input id="searchInput" class="search-input" placeholder="搜索文件名或简介..." onkeydown="if(event.key==='Enter')doSearch()" />
+        <button class="secondary" onclick="doSearch()">搜索</button>
+        <button class="ghost" onclick="clearSearch()">清除</button>
+      </div>
+      <div class="filter-row">
+        <select id="sortSelect" onchange="changeSort()" style="background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:6px;padding:6px 8px;">
+          <option value="updatedAt_desc">更新时间 ↓</option>
+          <option value="updatedAt_asc">更新时间 ↑</option>
+          <option value="name_asc">名称 A→Z</option>
+          <option value="name_desc">名称 Z→A</option>
+          <option value="size_desc">大小 ↓</option>
+          <option value="size_asc">大小 ↑</option>
+        </select>
+        <select id="ownerFilter" onchange="applyFilter()" style="background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:6px;padding:6px 8px;">
+          <option value="">全部上传者</option>
+        </select>
+        <select id="extFilter" onchange="applyFilter()" style="background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:6px;padding:6px 8px;">
+          <option value="">全部类型</option>
+          <option value=".sh">Shell (.sh)</option>
+          <option value=".py">Python (.py)</option>
+          <option value=".js">JavaScript (.js)</option>
+          <option value=".md">Markdown (.md)</option>
+          <option value=".json">JSON (.json)</option>
+          <option value=".txt">文本 (.txt)</option>
+          <option value=".yml">YAML (.yml)</option>
+          <option value=".sql">SQL (.sql)</option>
+          <option value=".bat">批处理 (.bat)</option>
+          <option value=".zip">压缩包 (.zip)</option>
+          <option value="__other__">其它</option>
+        </select>
+      </div>
+      <table>
+        <thead><tr><th>文件名</th><th>简介</th><th>大小</th><th>版本</th><th>更新时间</th><th>操作</th></tr></thead>
+        <tbody id="fileList"></tbody>
+      </table>
+      <div class="pagination" id="pagination" style="display:none">
+        <button class="secondary" onclick="changePage(-1)">上一页</button>
+        <span id="pageInfo"></span>
+        <button class="secondary" onclick="changePage(1)">下一页</button>
+      </div>
+      <div style="margin-top:16px">
+        <button class="secondary" onclick="refreshList()">刷新列表</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 版本历史弹窗 -->
+<div class="modal-mask" id="versionModal">
+  <div class="modal">
+    <h3 id="versionModalTitle">版本历史</h3>
+    <div id="versionList"></div>
+    <div class="actions">
+      <button class="secondary" onclick="closeModal('versionModal')">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- 新增版本弹窗 -->
+<div class="modal-mask" id="addVersionModal">
+  <div class="modal">
+    <h3>新增版本</h3>
+    <label>更新说明</label>
+    <input id="avNote" placeholder="本次改了什么？" />
+    <div id="avFileUpload">
+      <label>选择文件作为新版本（任意类型，上限 5MB）</label>
+      <input type="file" id="avFileInput" />
+    </div>
+    <div class="actions">
+      <button class="secondary" onclick="closeModal('addVersionModal')">取消</button>
+      <button onclick="submitAddVersion()">保存新版本</button>
+    </div>
+  </div>
+</div>
+
+<!-- 共享设置弹窗 -->
+<div class="modal-mask" id="shareModal">
+  <div class="modal">
+    <h3>共享设置</h3>
+    <div class="chk">
+      <input type="checkbox" id="sharePublic" />
+      <label for="sharePublic">设为小组公共文件（所有人可见）</label>
+    </div>
+    <label>共享给指定成员</label>
+    <div id="shareUsers" style="max-height:180px;overflow-y:auto;border:1px solid #334155;border-radius:6px;padding:8px;margin-bottom:10px"></div>
+    <div class="muted" style="margin-bottom:10px">勾选要共享的成员。公共文件 + 指定共享可同时生效。</div>
+    <div class="actions">
+      <button class="secondary" onclick="closeModal('shareModal')">取消</button>
+      <button onclick="submitShare()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 重命名弹窗 -->
+<div class="modal-mask" id="renameModal">
+  <div class="modal">
+    <h3>重命名</h3>
+    <label>新文件名</label>
+    <input id="renameInput" />
+    <div class="actions">
+      <button class="secondary" onclick="closeModal('renameModal')">取消</button>
+      <button onclick="submitRename()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 编辑简介弹窗 -->
+<div class="modal-mask" id="editDescModal">
+  <div class="modal">
+    <h3>编辑简介</h3>
+    <label>文件简介（可选，最多 500 字）</label>
+    <textarea id="editDescInput" style="min-height:80px" placeholder="一句话说明这个文件的用途"></textarea>
+    <div class="actions">
+      <button class="secondary" onclick="closeModal('editDescModal')">取消</button>
+      <button onclick="submitEditDesc()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 删除确认弹窗 -->
+<div class="modal-mask" id="confirmModal">
+  <div class="modal" style="max-width:420px">
+    <h3 id="confirmTitle">确认删除</h3>
+    <p id="confirmMessage" style="color:#e2e8f0;line-height:1.6;margin:8px 0 16px"></p>
+    <div class="actions">
+      <button class="secondary" onclick="closeModal('confirmModal')">取消</button>
+      <button id="confirmOkBtn" style="background:#dc2626;border-color:#dc2626" onclick="confirmAction()">确认删除</button>
+    </div>
+  </div>
+</div>
+
+<!-- 在线预览弹窗 -->
+<div class="modal-mask" id="previewModal">
+  <div class="modal">
+    <h3 id="previewTitle">在线预览</h3>
+    <div class="preview" id="previewContent"></div>
+    <div class="actions">
+      <button class="secondary" onclick="closeModal('previewModal')">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- 用户管理弹窗 -->
+<div class="modal-mask" id="adminModal">
+  <div class="modal" style="max-width:720px">
+    <h3>👥 用户管理</h3>
+    <table>
+      <thead><tr><th>用户名</th><th>角色</th><th>状态</th><th>注册时间</th><th>操作</th></tr></thead>
+      <tbody id="adminUserList"></tbody>
+    </table>
+    <div class="actions">
+      <button class="secondary" onclick="closeModal('adminModal')">关闭</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let TOKEN = localStorage.getItem('fh_token') || null
+let currentPage = 1
+let currentUser = null
+let currentSearch = ''
+let currentFileId = null
+let currentSort = { sortBy: 'updatedAt', order: 'desc' }
+let currentOwner = ''
+let currentExt = ''
+const PAGE_SIZE = 10
+
+const $ = (id) => document.getElementById(id)
+function showAlert(msg, type = 'error') {
+  const a = $('alert')
+  a.textContent = msg
+  a.className = 'alert ' + type
+  a.style.display = 'block'
+  setTimeout(() => (a.style.display = 'none'), 3000)
+}
+
+async function api(path, options = {}) {
+  const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) }
+  if (TOKEN) headers['Authorization'] = 'Bearer ' + TOKEN
+  const res = await fetch('/api' + path, { ...options, headers })
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(data.message || 'HTTP ' + res.status)
+  return data
+}
+
+// ---- 登录/注册 Tab ----
+function switchTab(tab) {
+  $('tabLogin').className = 'tab' + (tab === 'login' ? ' active' : '')
+  $('tabRegister').className = 'tab' + (tab === 'register' ? ' active' : '')
+  $('loginForm').style.display = tab === 'login' ? 'block' : 'none'
+  $('registerForm').style.display = tab === 'register' ? 'block' : 'none'
+}
+
+async function login() {
+  try {
+    const data = await api('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ username: $('username').value, password: $('password').value }),
+    })
+    localStorage.setItem('fh_token', data.token)
+    TOKEN = data.token
+    enterApp(data)
+  } catch (e) { showAlert(e.message) }
+}
+
+async function register() {
+  try {
+    const data = await api('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ username: $('regUsername').value, password: $('regPassword').value }),
+    })
+    showAlert('注册成功，请登录', 'ok')
+    switchTab('login')
+    $('username').value = data.username
+    $('password').value = ''
+  } catch (e) { showAlert(e.message) }
+}
+
+function enterApp(data) {
+  currentUser = data
+  $('loginView').style.display = 'none'
+  $('appView').style.display = 'block'
+  $('userInfo').textContent = '当前用户：' + data.username + '（' + (data.role === 'admin' ? '管理员' : '普通成员') + '）'
+  $('adminBtn').style.display = data.role === 'admin' ? 'inline-block' : 'none'
+  showAlert('欢迎，' + data.username, 'ok')
+  refreshList()
+}
+
+function logout() {
+  localStorage.removeItem('fh_token')
+  TOKEN = null
+  location.reload()
+}
+
+// ---- 文件列表 ----
+async function refreshList() {
+  try {
+    let url = '/files?page=' + currentPage + '&pageSize=' + PAGE_SIZE
+    if (currentSearch) url += '&q=' + encodeURIComponent(currentSearch)
+    if (currentSort) url += '&sortBy=' + currentSort.sortBy + '&order=' + currentSort.order
+    if (currentOwner) url += '&owner=' + encodeURIComponent(currentOwner)
+    if (currentExt) url += '&ext=' + encodeURIComponent(currentExt)
+    const data = await api(url)
+    const tbody = $('fileList')
+    tbody.innerHTML = ''
+    $('count').textContent = data.total
+    if (data.items.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="color:#64748b">暂无文件</td></tr>'
+      $('pagination').style.display = 'none'
+      return
+    }
+    data.items.forEach((f) => {
+      const tr = document.createElement('tr')
+      const isOwner = f.owner === currentUser.username
+      let tags = ''
+      if (isOwner) tags += '<span class="tag owner">我的</span>'
+      if (f.isPublic) tags += '<span class="tag public">公共</span>'
+      if (!isOwner && Array.isArray(f.sharedWith) && f.sharedWith.includes(currentUser.username)) tags += '<span class="tag shared">共享</span>'
+
+      let ops = ''
+      ops += '<a class="link" onclick="downloadFile(\'' + f.id + '\')">下载</a>'
+      ops += '<a class="link" onclick="previewFile(\'' + f.id + '\')">预览</a>'
+      ops += '<a class="link" onclick="openVersions(\'' + f.id + '\',\'' + escapeAttr(f.name) + '\')">版本</a>'
+      if (isOwner || currentUser.role === 'admin') {
+        ops += '<a class="link" onclick="openAddVersion(\'' + f.id + '\')">新版本</a>'
+        ops += '<a class="link" onclick="openShare(\'' + f.id + '\',\'' + escapeAttr(f.name) + '\',\'' + escapeAttr(JSON.stringify(f.sharedWith || [])) + '\',' + (f.isPublic ? 'true' : 'false') + ')">共享</a>'
+        ops += '<a class="link" onclick="openEditDesc(\'' + f.id + '\',\'' + escapeAttr(f.description || '') + '\')">简介</a>'
+        ops += '<a class="link" onclick="openRename(\'' + f.id + '\',\'' + escapeAttr(f.name) + '\')">重命名</a>'
+        ops += '<span class="danger" onclick="deleteFile(\'' + f.id + '\')">删除</span>'
+      }
+      const desc = f.description ? escapeHtml(f.description) : '<span style="color:#94a3b8">—</span>'
+      tr.innerHTML =
+        '<td>' + escapeHtml(f.name) + tags + '</td>' +
+        '<td class="desc-cell">' + desc + '</td>' +
+        '<td>' + formatSize(f.size) + '</td>' +
+        '<td>v' + f.currentVersion + '</td>' +
+        '<td>' + new Date(f.updatedAt).toLocaleString('zh-CN') + '</td>' +
+        '<td>' + ops + '</td>'
+      tbody.appendChild(tr)
+    })
+
+    // 动态填充上传者筛选下拉框（保留当前选中值）
+    const ownerSel = $('ownerFilter')
+    const prevOwner = ownerSel.value
+    const owners = [...new Set(data.items.map((f) => f.owner))].sort()
+    ownerSel.innerHTML = '<option value="">全部上传者</option>' + owners.map((o) => '<option value="' + escapeAttr(o) + '">' + escapeHtml(o) + '</option>').join('')
+    if (owners.includes(prevOwner)) ownerSel.value = prevOwner
+
+    const totalPages = Math.max(1, Math.ceil(data.total / PAGE_SIZE))
+    $('pageInfo').textContent = '第 ' + data.page + ' / ' + totalPages + ' 页'
+    $('pagination').style.display = data.total > PAGE_SIZE ? 'flex' : 'none'
+  } catch (e) { showAlert(e.message) }
+}
+
+function changePage(delta) {
+  currentPage = Math.max(1, currentPage + delta)
+  refreshList()
+}
+
+function doSearch() {
+  currentSearch = $('searchInput').value.trim()
+  currentPage = 1
+  refreshList()
+}
+
+function clearSearch() {
+  currentSearch = ''
+  $('searchInput').value = ''
+  currentPage = 1
+  refreshList()
+}
+
+function changeSort() {
+  const val = $('sortSelect').value
+  const [sortBy, order] = val.split('_')
+  currentSort = { sortBy, order }
+  currentPage = 1
+  refreshList()
+}
+
+function applyFilter() {
+  currentOwner = $('ownerFilter').value
+  currentExt = $('extFilter').value
+  currentPage = 1
+  refreshList()
+}
+
+// ---- 上传 ----
+async function uploadFile() {
+  const fileInput = $('fileInput')
+  const file = fileInput.files[0]
+  if (!file) return showAlert('请先选择文件')
+  if (file.size > 5 * 1024 * 1024) return showAlert('文件超过 5MB 上限')
+
+  const formData = new FormData()
+  formData.append('file', file)
+  const description = $('fileDesc').value.trim()
+  if (description) formData.append('description', description)
+
+  try {
+    const res = await fetch('/api/files', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + TOKEN },
+      body: formData,
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) throw new Error(data.message || 'HTTP ' + res.status)
+    fileInput.value = ''
+    $('fileDesc').value = ''
+    showAlert('上传成功：' + data.name, 'ok')
+    refreshList()
+  } catch (e) { showAlert(e.message) }
+}
+
+// ---- 下载 ----
+async function downloadFile(id) {
+  try {
+    const res = await fetch('/api/files/download/' + id, { headers: { Authorization: 'Bearer ' + TOKEN } })
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      showAlert(data.message || '下载失败')
+      return
+    }
+    const cd = res.headers.get('Content-Disposition') || ''
+    let filename = 'download'
+    const m = cd.match(/filename\*=UTF-8''([^;]+)/)
+    if (m) filename = decodeURIComponent(m[1])
+    else {
+      const m2 = cd.match(/filename="?([^";]+)"?/)
+      if (m2) filename = m2[1]
+    }
+    const blob = await res.blob()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
+    showAlert('已开始下载：' + filename, 'ok')
+  } catch (e) { showAlert(e.message) }
+}
+
+// ---- 在线预览（文本类） ----
+async function previewFile(id) {
+  // 直接下载当前版本并尝试以文本预览
+  try {
+    const res = await fetch('/api/files/download/' + id, { headers: { Authorization: 'Bearer ' + TOKEN } })
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}))
+      showAlert(d.message || '预览失败')
+      return
+    }
+    const cd = res.headers.get('Content-Disposition') || ''
+    let filename = 'file'
+    const m = cd.match(/filename\*=UTF-8''([^;]+)/)
+    if (m) filename = decodeURIComponent(m[1])
+    const text = await res.text()
+    $('previewTitle').textContent = '在线预览：' + filename
+    $('previewContent').textContent = text.length > 20000 ? text.slice(0, 20000) + '\n\n...（内容过长，已截断，请下载查看）' : text
+    openModal('previewModal')
+  } catch (e) { showAlert(e.message) }
+}
+
+// ---- 版本管理 ----
+async function openVersions(id, name) {
+  try {
+    const versions = await api('/files/' + id + '/versions')
+    // 获取文件当前版本号（用于标记当前版本）
+    const fileInfo = await api('/files?q=' + encodeURIComponent(name) + '&pageSize=100')
+    let currentVer = null
+    const found = fileInfo.items.find(f => f.id === id)
+    if (found) currentVer = found.currentVersion
+
+    currentFileId = id
+    $('versionModalTitle').textContent = '版本历史：' + name
+    const list = $('versionList')
+    list.innerHTML = ''
+    if (versions.length === 0) {
+      list.innerHTML = '<div class="muted">暂无版本记录</div>'
+    }
+    versions.forEach((v) => {
+      const div = document.createElement('div')
+      div.className = 'version-item'
+      const isCurrent = currentVer === v.version
+      const currentTag = isCurrent ? '<span class="tag owner">当前</span>' : ''
+      const restoreLink = isCurrent
+        ? '<span class="muted">已是当前版本</span>'
+        : '<a class="link" onclick="restoreVersion(' + v.version + ')">回滚</a>'
+      div.innerHTML =
+        '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">' +
+        '<div><strong>v' + v.version + '</strong> ' + currentTag + ' · ' + new Date(v.createdAt).toLocaleString('zh-CN') +
+        ' · 由 ' + escapeHtml(v.updatedBy) + ' · ' + formatSize(v.size) + '</div>' +
+        '<div>' +
+        '<a class="link" onclick="viewVersion(' + v.version + ')">查看</a>' +
+        restoreLink +
+        '<a class="link danger" onclick="askDeleteVersion(' + v.version + ')">删除</a>' +
+        '</div></div>' +
+        (v.changeNote ? '<div class="muted" style="margin-top:4px">📝 ' + escapeHtml(v.changeNote) + '</div>' : '')
+      list.appendChild(div)
+    })
+    openModal('versionModal')
+  } catch (e) { showAlert(e.message) }
+}
+
+async function viewVersion(version) {
+  try {
+    const data = await api('/files/' + currentFileId + '/versions/' + version)
+    $('previewTitle').textContent = 'v' + version + ' 内容：' + data.name
+    $('previewContent').textContent = data.content
+    openModal('previewModal')
+  } catch (e) { showAlert(e.message) }
+}
+
+async function restoreVersion(version) {
+  if (!confirm('确定回滚到 v' + version + '？当前版本将切换为 v' + version + '。')) return
+  try {
+    const res = await api('/files/' + currentFileId + '/versions/' + version + '/restore', { method: 'POST' })
+    showAlert('已回滚到 v' + version + '（当前版本：v' + res.currentVersion + '）', 'ok')
+    closeModal('versionModal')
+    refreshList()
+  } catch (e) { showAlert(e.message) }
+}
+
+// ---- 删除确认弹窗（通用） ----
+let pendingConfirm = null
+
+function askDeleteVersion(version) {
+  pendingConfirm = async () => {
+    await api('/files/' + currentFileId + '/versions/' + version, { method: 'DELETE' })
+    showAlert('已删除版本 v' + version, 'ok')
+    // 重新加载版本历史
+    const name = $('versionModalTitle').textContent.replace('版本历史：', '')
+    openVersions(currentFileId, name)
+    refreshList()
+  }
+  $('confirmTitle').textContent = '删除版本 v' + version
+  $('confirmMessage').textContent = '确定要删除版本 v' + version + ' 吗？该版本的文件内容将被永久删除，无法恢复。'
+  $('confirmOkBtn').textContent = '确认删除'
+  openModal('confirmModal')
+}
+
+async function confirmAction() {
+  if (!pendingConfirm) return
+  const fn = pendingConfirm
+  pendingConfirm = null
+  closeModal('confirmModal')
+  try {
+    await fn()
+  } catch (e) { showAlert(e.message) }
+}
+
+function openAddVersion(id) {
+  currentFileId = id
+  $('avNote').value = ''
+  $('avFileInput').value = ''
+  openModal('addVersionModal')
+}
+
+async function submitAddVersion() {
+  const changeNote = $('avNote').value.trim()
+  const file = $('avFileInput').files[0]
+  if (!file) return showAlert('请选择要上传的文件')
+  if (file.size > 5 * 1024 * 1024) return showAlert('文件超过 5MB 上限')
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('changeNote', changeNote)
+  try {
+    const res = await fetch('/api/files/' + currentFileId + '/versions', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + TOKEN },
+      body: formData,
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) throw new Error(data.message || 'HTTP ' + res.status)
+    closeModal('addVersionModal')
+    showAlert('新版本已保存（v' + data.currentVersion + '）', 'ok')
+    refreshList()
+  } catch (e) { showAlert(e.message) }
+}
+
+// ---- 共享 ----
+async function openShare(id, name, sharedWithJson, isPublic) {
+  currentFileId = id
+  $('sharePublic').checked = !!isPublic
+  const sharedWith = sharedWithJson ? JSON.parse(sharedWithJson) : []
+  const container = $('shareUsers')
+  container.innerHTML = '<div class="muted">加载成员中...</div>'
+  openModal('shareModal')
+  try {
+    const users = await api('/api/users')
+    container.innerHTML = ''
+    if (users.length === 0) {
+      container.innerHTML = '<div class="muted">暂无其他成员</div>'
+      return
+    }
+    users.forEach((u) => {
+      if (u.username === currentUser.username) return // 不显示自己
+      const checked = sharedWith.includes(u.username) ? 'checked' : ''
+      const roleTag = u.role === 'admin' ? '（管理员）' : ''
+      const label = document.createElement('label')
+      label.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer;color:#e2e8f0'
+      label.innerHTML = '<input type="checkbox" value="' + escapeAttr(u.username) + '" ' + checked + '> ' + escapeHtml(u.username) + roleTag
+      container.appendChild(label)
+    })
+  } catch (e) {
+    container.innerHTML = '<div class="muted">加载成员失败</div>'
+  }
+}
+
+async function submitShare() {
+  const isPublic = $('sharePublic').checked
+  const usernames = Array.from($('shareUsers').querySelectorAll('input[type=checkbox]:checked')).map((c) => c.value)
+  try {
+    await api('/files/' + currentFileId + '/public', { method: 'POST', body: JSON.stringify({ isPublic }) })
+    await api('/files/' + currentFileId + '/share', { method: 'POST', body: JSON.stringify({ usernames }) })
+    closeModal('shareModal')
+    showAlert('共享设置已保存', 'ok')
+    refreshList()
+  } catch (e) { showAlert(e.message) }
+}
+
+// ---- 重命名 ----
+function openRename(id, name) {
+  currentFileId = id
+  $('renameInput').value = name
+  openModal('renameModal')
+}
+
+async function submitRename() {
+  const newName = $('renameInput').value.trim()
+  if (!newName) return showAlert('请输入新文件名')
+  try {
+    await api('/files/' + currentFileId, { method: 'PATCH', body: JSON.stringify({ name: newName }) })
+    closeModal('renameModal')
+    showAlert('重命名成功', 'ok')
+    refreshList()
+  } catch (e) { showAlert(e.message) }
+}
+
+// ---- 编辑简介 ----
+function openEditDesc(id, desc) {
+  currentFileId = id
+  $('editDescInput').value = desc || ''
+  openModal('editDescModal')
+}
+
+async function submitEditDesc() {
+  const description = $('editDescInput').value.trim()
+  try {
+    await api('/files/' + currentFileId, { method: 'PATCH', body: JSON.stringify({ description }) })
+    closeModal('editDescModal')
+    showAlert('简介已更新', 'ok')
+    refreshList()
+  } catch (e) { showAlert(e.message) }
+}
+
+// ---- 删除 ----
+function deleteFile(id) {
+  pendingConfirm = async () => {
+    await api('/files/' + id, { method: 'DELETE' })
+    showAlert('已删除', 'ok')
+    refreshList()
+  }
+  $('confirmTitle').textContent = '删除文件'
+  $('confirmMessage').textContent = '确定要删除该文件吗？该文件的所有版本都会被永久删除，无法恢复。'
+  $('confirmOkBtn').textContent = '确认删除'
+  openModal('confirmModal')
+}
+
+// ---- 用户管理（管理员） ----
+async function openAdmin() {
+  try {
+    const users = await api('/admin/users')
+    const tbody = $('adminUserList')
+    tbody.innerHTML = ''
+    users.forEach((u) => {
+      const tr = document.createElement('tr')
+      const isSelf = u.username === currentUser.username
+      let statusTag = u.status === 'disabled' ? '<span class="tag disabled">已禁用</span>' : '<span class="tag owner">正常</span>'
+      let roleTag = u.role === 'admin' ? '<span class="tag admin">管理员</span>' : '<span class="tag shared">成员</span>'
+      let ops = ''
+      if (!isSelf) {
+        ops += '<a class="link" onclick="toggleUserStatus(\'' + u.username + '\',\'' + u.status + '\')">' + (u.status === 'disabled' ? '启用' : '禁用') + '</a>'
+        ops += '<a class="link" onclick="toggleUserRole(\'' + u.username + '\',\'' + u.role + '\')">' + (u.role === 'admin' ? '设为成员' : '设为管理员') + '</a>'
+        ops += '<a class="link" onclick="resetUserPwd(\'' + u.username + '\')">重置密码</a>'
+      } else {
+        ops = '<span class="muted">当前账号</span>'
+      }
+      tr.innerHTML =
+        '<td>' + escapeHtml(u.username) + '</td>' +
+        '<td>' + roleTag + '</td>' +
+        '<td>' + statusTag + '</td>' +
+        '<td>' + new Date(u.createdAt).toLocaleString('zh-CN') + '</td>' +
+        '<td>' + ops + '</td>'
+      tbody.appendChild(tr)
+    })
+    openModal('adminModal')
+  } catch (e) { showAlert(e.message) }
+}
+
+async function toggleUserStatus(username, status) {
+  const action = status === 'disabled' ? '启用' : '禁用'
+  if (!confirm('确定' + action + '用户 ' + username + '？')) return
+  try {
+    await api('/admin/users/' + username, { method: 'PATCH', body: JSON.stringify({ status: status === 'disabled' ? 'active' : 'disabled' }) })
+    showAlert('已' + action + ' ' + username, 'ok')
+    openAdmin()
+  } catch (e) { showAlert(e.message) }
+}
+
+async function toggleUserRole(username, role) {
+  const action = role === 'admin' ? '设为普通成员' : '设为管理员'
+  if (!confirm('确定将 ' + username + ' ' + action + '？')) return
+  try {
+    await api('/admin/users/' + username, { method: 'PATCH', body: JSON.stringify({ role: role === 'admin' ? 'user' : 'admin' }) })
+    showAlert('已' + action + ' ' + username, 'ok')
+    openAdmin()
+  } catch (e) { showAlert(e.message) }
+}
+
+async function resetUserPwd(username) {
+  const newPwd = prompt('为 ' + username + ' 设置新密码（至少 6 位）：')
+  if (!newPwd) return
+  try {
+    await api('/admin/users/' + username + '/reset-password', { method: 'POST', body: JSON.stringify({ newPassword: newPwd }) })
+    showAlert('已重置 ' + username + ' 的密码', 'ok')
+  } catch (e) { showAlert(e.message) }
+}
+
+// ---- 弹窗 ----
+function openModal(id) { $(id).style.display = 'flex' }
+function closeModal(id) { $(id).style.display = 'none' }
+
+// ---- 工具 ----
+function formatSize(bytes) {
+  if (bytes < 1024) return bytes + ' B'
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB'
+  return (bytes / 1024 / 1024).toFixed(2) + ' MB'
+}
+
+function escapeHtml(s) {
+  const A = String.fromCharCode(38)
+  const map = {
+    '&': A + 'amp;',
+    '<': A + 'lt;',
+    '>': A + 'gt;',
+    '"': A + 'quot;',
+    "'": A + '#39;'
+  }
+  return String(s).replace(/[&<>"']/g, (c) => map[c])
+}
+
+function escapeAttr(s) {
+  return String(s).replace(/'/g, String.fromCharCode(92) + "'")
+}
+
+// 点击遮罩关闭弹窗
+document.querySelectorAll('.modal-mask').forEach((m) => {
+  m.addEventListener('click', (e) => { if (e.target === m) m.style.display = 'none' })
+})
+
+// ---- 初始化 ----
+if (TOKEN) {
+  $('loginView').style.display = 'none'
+  $('appView').style.display = 'block'
+  try {
+    const payload = JSON.parse(atob(TOKEN.split('.')[0].replace(/-/g, '+').replace(/_/g, '/')))
+    currentUser = { username: payload.username, role: payload.role }
+    $('userInfo').textContent = '当前用户：' + payload.username + '（' + (payload.role === 'admin' ? '管理员' : '普通成员') + '）'
+    $('adminBtn').style.display = payload.role === 'admin' ? 'inline-block' : 'none'
+  } catch {}
+  refreshList().catch(() => { logout() })
+}
+</script>
+</body>
+</html>

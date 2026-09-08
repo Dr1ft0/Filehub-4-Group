@@ -1,0 +1,15 @@
+# 数据目录（数据库、上传文件、日志）—— 不提交到 Git
+data/
+
+# Node 依赖
+node_modules/
+
+# 日志
+*.log
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 临时测试脚本
+test-*.mjs

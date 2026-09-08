@@ -1,0 +1,14 @@
+{
+  "name": "filehub-demo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "文件共享系统演示版 —— 分层架构教学示例（零依赖，纯 Node 原生）",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
