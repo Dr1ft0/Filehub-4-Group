@@ -302,6 +302,7 @@ let currentFileId = null
 let currentSort = { sortBy: 'updatedAt', order: 'desc' }
 let currentOwner = ''
 let currentExt = ''
+let currentFiles = []
 const PAGE_SIZE = 10
 
 const $ = (id) => document.getElementById(id)
@@ -380,6 +381,7 @@ async function refreshList() {
     if (currentOwner) url += '&owner=' + encodeURIComponent(currentOwner)
     if (currentExt) url += '&ext=' + encodeURIComponent(currentExt)
     const data = await api(url)
+    currentFiles = data.items
     const tbody = $('fileList')
     tbody.innerHTML = ''
     $('count').textContent = data.total
@@ -402,7 +404,7 @@ async function refreshList() {
       ops += '<a class="link" onclick="openVersions(\'' + f.id + '\',\'' + escapeAttr(f.name) + '\')">版本</a>'
       if (isOwner || currentUser.role === 'admin') {
         ops += '<a class="link" onclick="openAddVersion(\'' + f.id + '\')">新版本</a>'
-        ops += '<a class="link" onclick="openShare(\'' + f.id + '\',\'' + escapeAttr(f.name) + '\',\'' + escapeAttr(JSON.stringify(f.sharedWith || [])) + '\',' + (f.isPublic ? 'true' : 'false') + ')">共享</a>'
+        ops += '<a class="link" onclick="openShare(\'' + f.id + '\')">共享</a>'
         ops += '<a class="link" onclick="openEditDesc(\'' + f.id + '\',\'' + escapeAttr(f.description || '') + '\')">简介</a>'
         ops += '<a class="link" onclick="openRename(\'' + f.id + '\',\'' + escapeAttr(f.name) + '\')">重命名</a>'
         ops += '<span class="danger" onclick="deleteFile(\'' + f.id + '\')">删除</span>'
@@ -660,10 +662,11 @@ async function submitAddVersion() {
 }
 
 // ---- 共享 ----
-async function openShare(id, name, sharedWithJson, isPublic) {
+async function openShare(id) {
   currentFileId = id
-  $('sharePublic').checked = !!isPublic
-  const sharedWith = sharedWithJson ? JSON.parse(sharedWithJson) : []
+  const file = currentFiles.find((f) => String(f.id) === String(id)) || {}
+  const sharedWith = Array.isArray(file.sharedWith) ? file.sharedWith : []
+  $('sharePublic').checked = !!file.isPublic
   const container = $('shareUsers')
   container.innerHTML = '<div class="muted">加载成员中...</div>'
   openModal('shareModal')
