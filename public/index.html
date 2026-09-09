@@ -5,81 +5,172 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>脚本仙人</title>
 <style>
+  :root {
+    --bg0: #0a0f1e;
+    --bg1: #0f1528;
+    --card: #121a30;
+    --card2: #17203a;
+    --border: #26314f;
+    --border2: #334065;
+    --text: #e7edf7;
+    --muted: #8b98b5;
+    --faint: #5b6b8c;
+    --primary: #6366f1;
+    --primary2: #8b5cf6;
+    --blue: #38bdf8;
+    --green: #34d399;
+    --amber: #fbbf24;
+    --red: #f87171;
+  }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: system-ui, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
-  .container { max-width: 1000px; margin: 0 auto; padding: 30px 20px; }
-  h1 { font-size: 24px; margin-bottom: 6px; }
-  .sub { color: #94a3b8; font-size: 13px; margin-bottom: 24px; }
-  .card { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 20px; margin-bottom: 20px; }
-  .card h2 { font-size: 16px; margin-bottom: 14px; color: #93c5fd; }
-  label { font-size: 13px; color: #94a3b8; display: block; margin-bottom: 4px; }
-  input, textarea, select { width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: #e2e8f0; margin-bottom: 10px; font-size: 13px; }
-  textarea { min-height: 70px; font-family: monospace; resize: vertical; }
-  button { padding: 8px 14px; border: none; border-radius: 6px; background: #2563eb; color: #fff; cursor: pointer; font-size: 13px; }
-  button:hover { background: #1d4ed8; }
-  button.secondary { background: #475569; } button.secondary:hover { background: #64748b; }
-  button.ghost { background: transparent; border: 1px solid #475569; color: #94a3b8; }
-  button.ghost:hover { background: #334155; color: #e2e8f0; }
+  body {
+    font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    background: radial-gradient(1200px 600px at 20% -10%, #1c2547 0%, transparent 55%),
+                radial-gradient(1000px 500px at 90% 0%, #2a1f4d 0%, transparent 50%),
+                linear-gradient(180deg, var(--bg1), var(--bg0));
+    background-attachment: fixed;
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.5;
+  }
+  .container { max-width: 1180px; margin: 0 auto; padding: 30px 20px 60px; }
+  .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+  .brand .logo {
+    width: 40px; height: 40px; border-radius: 11px; flex: 0 0 auto;
+    background: linear-gradient(135deg, var(--primary), var(--primary2));
+    display: flex; align-items: center; justify-content: center; font-size: 20px;
+    box-shadow: 0 6px 18px rgba(99,102,241,.35);
+  }
+  h1 {
+    font-size: 24px; font-weight: 700; letter-spacing: .5px;
+    background: linear-gradient(90deg, #a5b4fc, #c4b5fd);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .sub { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
+  .card {
+    background: linear-gradient(180deg, var(--card2), var(--card));
+    border: 1px solid var(--border);
+    border-radius: 14px; padding: 20px; margin-bottom: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.25);
+  }
+  .card h2 { font-size: 16px; margin-bottom: 14px; color: #a5b4fc; font-weight: 600; }
+  label { font-size: 13px; color: var(--muted); display: block; margin-bottom: 4px; }
+  input, textarea, select {
+    width: 100%; padding: 9px 11px; border-radius: 8px; border: 1px solid var(--border2);
+    background: var(--bg0); color: var(--text); margin-bottom: 10px; font-size: 13px;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  input:focus, textarea:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,.18); }
+  textarea { min-height: 70px; font-family: "Cascadia Code", Consolas, monospace; resize: vertical; }
+  button {
+    padding: 8px 14px; border: none; border-radius: 8px; cursor: pointer; font-size: 13px;
+    transition: transform .1s, box-shadow .15s, background .15s;
+  }
+  button:active { transform: translateY(1px); }
+  button.primary { background: linear-gradient(135deg, var(--primary), var(--primary2)); color: #fff; box-shadow: 0 4px 14px rgba(99,102,241,.3); }
+  button.primary:hover { box-shadow: 0 6px 20px rgba(99,102,241,.45); }
+  button.secondary { background: var(--border2); color: var(--text); }
+  button.secondary:hover { background: #3d4a75; }
+  button.ghost { background: transparent; border: 1px solid var(--border2); color: var(--muted); }
+  button.ghost:hover { background: var(--card2); color: var(--text); }
   button.small { padding: 3px 8px; font-size: 12px; }
   .row { display: flex; gap: 10px; }
   .row > * { flex: 1; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid #334155; vertical-align: middle; }
-  th { color: #94a3b8; font-weight: 500; }
-  .desc-cell { color: #cbd5e1; max-width: 260px; word-break: break-all; }
-  .link { color: #60a5fa; cursor: pointer; text-decoration: underline; margin-right: 8px; }
-  .danger { color: #f87171; cursor: pointer; text-decoration: underline; }
-  .alert { padding: 10px 12px; border-radius: 6px; font-size: 13px; margin-bottom: 16px; display: none; }
-  .alert.error { background: rgba(248,113,113,.15); color: #fca5a5; }
-  .alert.ok { background: rgba(52,211,153,.15); color: #6ee7b7; }
+  th, td { text-align: left; padding: 9px 7px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  th { color: var(--muted); font-weight: 500; font-size: 12px; white-space: nowrap; }
+  tbody tr { transition: background .12s; }
+  tbody tr:hover { background: rgba(99,102,241,.05); }
+  .desc-cell { color: #cbd5e1; max-width: 240px; word-break: break-all; }
+  .link { color: var(--blue); cursor: pointer; text-decoration: none; margin-right: 10px; white-space: nowrap; }
+  .link:hover { text-decoration: underline; }
+  .danger { color: var(--red); cursor: pointer; white-space: nowrap; }
+  .danger:hover { text-decoration: underline; }
+  .alert { padding: 10px 12px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; display: none; }
+  .alert.error { background: rgba(248,113,113,.15); color: #fca5a5; border: 1px solid rgba(248,113,113,.3); }
+  .alert.ok { background: rgba(52,211,153,.15); color: #6ee7b7; border: 1px solid rgba(52,211,153,.3); }
   #loginView .card { text-align: left; }
-  .filebadge { background: #334155; padding: 2px 8px; border-radius: 10px; font-size: 11px; }
+  .filebadge { background: var(--border2); padding: 2px 9px; border-radius: 10px; font-size: 11px; color: var(--muted); }
   .tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
-  .tab { padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; border: 1px solid #475569; color: #94a3b8; background: transparent; }
-  .tab.active { background: #2563eb; color: #fff; border-color: #2563eb; }
-  .pagination { display: flex; align-items: center; gap: 10px; margin-top: 14px; font-size: 13px; color: #94a3b8; }
+  .tab { padding: 6px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; border: 1px solid var(--border2); color: var(--muted); background: transparent; }
+  .tab.active { background: linear-gradient(135deg, var(--primary), var(--primary2)); color: #fff; border-color: transparent; }
+  .pagination { display: flex; align-items: center; gap: 10px; margin-top: 14px; font-size: 13px; color: var(--muted); }
   .pagination button { padding: 4px 10px; font-size: 12px; }
-  .userinfo { color: #94a3b8; font-size: 12px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+  .userinfo { color: var(--muted); font-size: 12px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
   .tag { display: inline-block; padding: 1px 7px; border-radius: 8px; font-size: 11px; margin-left: 4px; }
   .tag.public { background: rgba(52,211,153,.2); color: #6ee7b7; }
-  .tag.shared { background: rgba(96,165,250,.2); color: #60a5fa; }
-  .tag.owner { background: rgba(251,191,36,.2); color: #fbbf24; }
+  .tag.shared { background: rgba(56,189,248,.2); color: #7dd3fc; }
+  .tag.owner { background: rgba(251,191,36,.2); color: #fcd34d; }
   .tag.admin { background: rgba(248,113,113,.2); color: #fca5a5; }
-  .tag.disabled { background: rgba(148,163,184,.2); color: #94a3b8; }
-  .modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: none; align-items: center; justify-content: center; z-index: 100; }
-  .modal { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 20px; width: 90%; max-width: 560px; max-height: 85vh; overflow-y: auto; }
-  .modal h3 { margin-bottom: 14px; color: #93c5fd; font-size: 16px; }
+  .tag.disabled { background: rgba(148,163,184,.2); color: var(--muted); }
+  .modal-mask { position: fixed; inset: 0; background: rgba(4,7,18,.68); display: none; align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(2px); }
+  .modal { background: linear-gradient(180deg, var(--card2), var(--card)); border: 1px solid var(--border2); border-radius: 14px; padding: 22px; width: 90%; max-width: 560px; max-height: 86vh; overflow-y: auto; box-shadow: 0 24px 60px rgba(0,0,0,.5); }
+  .modal h3 { margin-bottom: 16px; color: #a5b4fc; font-size: 16px; }
   .modal .actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
   .searchbar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; align-items: center; }
   .searchbar input { margin-bottom: 0; }
-  .searchbar button { flex: 0 0 auto; }
-  .searchbar .search-input { flex: 1 1 200px; min-width: 150px; }
-  .searchbar select { flex: 0 0 auto; }
-  .filter-row { display: flex; gap: 8px; align-items: center; }
-  .filter-row select { flex: 1 1 0; min-width: 0; }
-  .preview { background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 12px; font-family: monospace; font-size: 12px; white-space: pre-wrap; word-break: break-all; max-height: 300px; overflow-y: auto; color: #a5f3fc; }
-  .muted { color: #64748b; font-size: 12px; }
-  .version-item { padding: 8px 0; border-bottom: 1px solid #334155; font-size: 13px; }
+  .searchbar .search-input { flex: 1 1 220px; min-width: 160px; }
+  .filter-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+  .filter-row select { flex: 1 1 0; min-width: 120px; margin-bottom: 0; }
+  .filter-row .fl-label { font-size: 12px; color: var(--faint); white-space: nowrap; }
+  .tagcloud { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; align-items: center; }
+  .tagcloud .tg-title { font-size: 12px; color: var(--faint); margin-right: 2px; }
+  .active-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .af-chip {
+    display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px;
+    font-size: 12px; color: var(--text); background: var(--card2); border: 1px solid var(--border2); cursor: pointer;
+  }
+  .af-chip:hover { border-color: var(--red); color: var(--red); }
+  .af-chip .af-label { color: var(--faint); }
+  .af-chip .af-x { color: var(--red); font-weight: 700; }
+  .tag-chip {
+    display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border-radius: 999px;
+    font-size: 11px; border: 1px solid; white-space: nowrap; line-height: 1.5;
+    transition: transform .12s, box-shadow .12s;
+  }
+  .tag-chip .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: 0 0 auto; }
+  .tag-chip.clickable { cursor: pointer; }
+  .tag-chip.clickable:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0,0,0,.3); }
+  .tag-chip.active { outline: 2px solid currentColor; outline-offset: 1px; }
+  .tag-chip .tg-count { margin-left: 3px; padding: 0 5px; border-radius: 8px; background: currentColor; color: #0a0f1e; font-weight: 700; font-size: 10px; }
+  .tag-cell { max-width: 230px; }
+  .tag-cell .tag-chip { margin: 2px 3px 2px 0; }
+  .tag-picker { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+  .tag-picker input { margin-bottom: 0; }
+  .tp-selected { display: flex; flex-wrap: wrap; gap: 6px; min-height: 26px; }
+  .tp-selected:empty::after { content: '（未选择标签）'; color: var(--faint); font-size: 12px; }
+  .tp-selected .tag-chip { cursor: pointer; }
+  .tp-selected .chip-x { margin-left: 3px; font-weight: 700; opacity: .7; }
+  .tp-selected .chip-x:hover { opacity: 1; }
+  .tp-options { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; border: 1px dashed var(--border2); border-radius: 8px; min-height: 26px; }
+  .tp-options .tag-chip { cursor: pointer; }
+  .preview { background: var(--bg0); border: 1px solid var(--border2); border-radius: 8px; padding: 12px; font-family: "Cascadia Code", Consolas, monospace; font-size: 12px; white-space: pre-wrap; word-break: break-all; max-height: 300px; overflow-y: auto; color: #a5f3fc; }
+  .muted { color: var(--faint); font-size: 12px; }
+  .version-item { padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
   .version-item:last-child { border-bottom: none; }
   .chk { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
   .chk input { width: auto; margin: 0; }
   .chk label { margin: 0; }
-  .share-users { max-height: 200px; overflow-y: auto; border: 1px solid #334155; border-radius: 8px; padding: 6px; margin-bottom: 10px; background: #0f172a; }
+  .share-users { max-height: 200px; overflow-y: auto; border: 1px solid var(--border2); border-radius: 8px; padding: 6px; margin-bottom: 10px; background: var(--bg0); }
   .share-users::-webkit-scrollbar { width: 8px; }
-  .share-users::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+  .share-users::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
   .share-users::-webkit-scrollbar-track { background: transparent; }
-  .share-user { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 6px; cursor: pointer; color: #e2e8f0; font-size: 13px; transition: background .15s; }
-  .share-user:hover { background: #1e293b; }
-  .share-user input[type=checkbox] { width: 16px; height: 16px; margin: 0; flex: 0 0 auto; accent-color: #2563eb; cursor: pointer; }
+  .share-user { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 6px; cursor: pointer; color: var(--text); font-size: 13px; transition: background .15s; }
+  .share-user:hover { background: var(--card2); }
+  .share-user input[type=checkbox] { width: 16px; height: 16px; margin: 0; flex: 0 0 auto; accent-color: var(--primary); cursor: pointer; }
   .share-user .su-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .share-user .su-role { flex: 0 0 auto; font-size: 11px; color: #94a3b8; }
+  .share-user .su-role { flex: 0 0 auto; font-size: 11px; color: var(--muted); }
   .share-user .su-role.admin { color: #fca5a5; }
+  .empty { text-align: center; color: var(--faint); padding: 22px 0; }
 </style>
 </head>
 <body>
 <div class="container">
-  <h1>📁 脚本仙人</h1>
-  <div class="sub" id="sub">小组脚本共享 · 版本管理 · 简介搜索 · 排序</div>
+  <div class="brand">
+    <div class="logo">📁</div>
+    <h1>脚本仙人</h1>
+  </div>
+  <div class="sub" id="sub">小组脚本共享 · 版本管理 · 标签分类 · 搜索筛选</div>
 
   <div class="alert" id="alert"></div>
 
@@ -95,8 +186,8 @@
       <label>用户名</label>
       <input id="username" placeholder="请输入用户名" />
       <label>密码</label>
-      <input id="password" type="password" placeholder="请输入密码" />
-      <button onclick="login()">登录</button>
+      <input id="password" type="password" placeholder="请输入密码" onkeydown="if(event.key==='Enter')login()" />
+      <button class="primary" onclick="login()" style="width:100%">登录</button>
     </div>
 
     <div class="card" id="registerForm" style="display:none">
@@ -104,8 +195,8 @@
       <label>用户名（3-32 位，字母/数字/下划线）</label>
       <input id="regUsername" placeholder="如 zhangsan" />
       <label>密码（至少 6 位）</label>
-      <input id="regPassword" type="password" placeholder="请输入密码" />
-      <button onclick="register()">注册</button>
+      <input id="regPassword" type="password" placeholder="请输入密码" onkeydown="if(event.key==='Enter')register()" />
+      <button class="primary" onclick="register()" style="width:100%">注册</button>
     </div>
   </div>
 
@@ -122,14 +213,18 @@
     <!-- 上传 -->
     <div class="card">
       <h2>上传文件</h2>
-      <div id="fileUpload">
-        <label>选择文件（任意类型，上限 5MB）</label>
-        <input type="file" id="fileInput" />
-        <label>简介（可选）</label>
-        <input id="fileDesc" placeholder="一句话说明这个文件的用途" />
-        <div style="margin-top:10px">
-          <button onclick="uploadFile()">上传文件</button>
-        </div>
+      <label>选择文件（任意类型，上限 5MB）</label>
+      <input type="file" id="fileInput" />
+      <label>简介（可选）</label>
+      <input id="fileDesc" placeholder="一句话说明这个文件的用途" />
+      <label>标签（可选，点击下方现有标签复用，或输入新标签后回车）</label>
+      <div class="tag-picker">
+        <div class="tp-selected" id="uploadTagsSel"></div>
+        <input id="uploadTagsInput" placeholder="输入新标签后回车，可用逗号分隔多个" />
+        <div class="tp-options" id="uploadTagsOpts"></div>
+      </div>
+      <div style="margin-top:10px">
+        <button class="primary" onclick="uploadFile()">上传文件</button>
       </div>
     </div>
 
@@ -137,12 +232,12 @@
     <div class="card">
       <h2>文件列表 <span class="filebadge" id="count">0</span></h2>
       <div class="searchbar">
-        <input id="searchInput" class="search-input" placeholder="搜索文件名或简介..." onkeydown="if(event.key==='Enter')doSearch()" />
-        <button class="secondary" onclick="doSearch()">搜索</button>
+        <input id="searchInput" class="search-input" placeholder="搜索文件名 / 简介 / 标签…（快捷键 Ctrl+K）" />
+        <button class="primary" onclick="doSearch()">搜索</button>
         <button class="ghost" onclick="clearSearch()">清除</button>
       </div>
       <div class="filter-row">
-        <select id="sortSelect" onchange="changeSort()" style="background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:6px;padding:6px 8px;">
+        <select id="sortSelect" onchange="changeSort()">
           <option value="updatedAt_desc">更新时间 ↓</option>
           <option value="updatedAt_asc">更新时间 ↑</option>
           <option value="name_asc">名称 A→Z</option>
@@ -150,10 +245,10 @@
           <option value="size_desc">大小 ↓</option>
           <option value="size_asc">大小 ↑</option>
         </select>
-        <select id="ownerFilter" onchange="applyFilter()" style="background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:6px;padding:6px 8px;">
+        <select id="ownerFilter" onchange="applyFilter()">
           <option value="">全部上传者</option>
         </select>
-        <select id="extFilter" onchange="applyFilter()" style="background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:6px;padding:6px 8px;">
+        <select id="extFilter" onchange="applyFilter()">
           <option value="">全部类型</option>
           <option value=".sh">Shell (.sh)</option>
           <option value=".py">Python (.py)</option>
@@ -168,8 +263,10 @@
           <option value="__other__">其它</option>
         </select>
       </div>
+      <div class="tagcloud" id="tagCloud"><span class="muted">加载标签中…</span></div>
+      <div class="active-filters" id="activeFilters" style="display:none"></div>
       <table>
-        <thead><tr><th>文件名</th><th>简介</th><th>大小</th><th>版本</th><th>更新时间</th><th>操作</th></tr></thead>
+        <thead><tr><th>文件名</th><th>简介</th><th>标签</th><th>大小</th><th>版本</th><th>更新时间</th><th>操作</th></tr></thead>
         <tbody id="fileList"></tbody>
       </table>
       <div class="pagination" id="pagination" style="display:none">
@@ -207,7 +304,7 @@
     </div>
     <div class="actions">
       <button class="secondary" onclick="closeModal('addVersionModal')">取消</button>
-      <button onclick="submitAddVersion()">保存新版本</button>
+      <button class="primary" onclick="submitAddVersion()">保存新版本</button>
     </div>
   </div>
 </div>
@@ -225,7 +322,7 @@
     <div class="muted" style="margin-bottom:10px">勾选要共享的成员。公共文件 + 指定共享可同时生效。</div>
     <div class="actions">
       <button class="secondary" onclick="closeModal('shareModal')">取消</button>
-      <button onclick="submitShare()">保存</button>
+      <button class="primary" onclick="submitShare()">保存</button>
     </div>
   </div>
 </div>
@@ -238,20 +335,26 @@
     <input id="renameInput" />
     <div class="actions">
       <button class="secondary" onclick="closeModal('renameModal')">取消</button>
-      <button onclick="submitRename()">保存</button>
+      <button class="primary" onclick="submitRename()">保存</button>
     </div>
   </div>
 </div>
 
-<!-- 编辑简介弹窗 -->
+<!-- 编辑信息弹窗（简介 + 标签） -->
 <div class="modal-mask" id="editDescModal">
   <div class="modal">
-    <h3>编辑简介</h3>
+    <h3>编辑文件信息</h3>
     <label>文件简介（可选，最多 500 字）</label>
     <textarea id="editDescInput" style="min-height:80px" placeholder="一句话说明这个文件的用途"></textarea>
+    <label>标签（点击复用现有标签，或输入新标签后回车，最多 10 个）</label>
+    <div class="tag-picker">
+      <div class="tp-selected" id="editTagsSel"></div>
+      <input id="editTagsInput" placeholder="输入新标签后回车，可用逗号分隔多个" />
+      <div class="tp-options" id="editTagsOpts"></div>
+    </div>
     <div class="actions">
       <button class="secondary" onclick="closeModal('editDescModal')">取消</button>
-      <button onclick="submitEditDesc()">保存</button>
+      <button class="primary" onclick="submitEditInfo()">保存</button>
     </div>
   </div>
 </div>
@@ -260,10 +363,10 @@
 <div class="modal-mask" id="confirmModal">
   <div class="modal" style="max-width:420px">
     <h3 id="confirmTitle">确认删除</h3>
-    <p id="confirmMessage" style="color:#e2e8f0;line-height:1.6;margin:8px 0 16px"></p>
+    <p id="confirmMessage" style="color:var(--text);line-height:1.6;margin:8px 0 16px"></p>
     <div class="actions">
       <button class="secondary" onclick="closeModal('confirmModal')">取消</button>
-      <button id="confirmOkBtn" style="background:#dc2626;border-color:#dc2626" onclick="confirmAction()">确认删除</button>
+      <button id="confirmOkBtn" style="background:#dc2626" onclick="confirmAction()">确认删除</button>
     </div>
   </div>
 </div>
@@ -302,7 +405,13 @@ let currentFileId = null
 let currentSort = { sortBy: 'updatedAt', order: 'desc' }
 let currentOwner = ''
 let currentExt = ''
+let currentTags = []
 let currentFiles = []
+let allTags = []
+let allOwners = []
+let searchTimer = null
+const uploadPicker = { tags: [], sel: 'uploadTagsSel', input: 'uploadTagsInput', opts: 'uploadTagsOpts' }
+const editPicker = { tags: [], sel: 'editTagsSel', input: 'editTagsInput', opts: 'editTagsOpts' }
 const PAGE_SIZE = 10
 
 const $ = (id) => document.getElementById(id)
@@ -364,12 +473,168 @@ function enterApp(data) {
   $('adminBtn').style.display = data.role === 'admin' ? 'inline-block' : 'none'
   showAlert('欢迎，' + data.username, 'ok')
   refreshList()
+  loadMeta()
 }
 
 function logout() {
   localStorage.removeItem('fh_token')
   TOKEN = null
   location.reload()
+}
+
+// ---- 标签 / 上传者聚合（供筛选） ----
+async function loadMeta() {
+  try {
+    const meta = await api('/files/meta')
+    allTags = meta.tags || []
+    allOwners = meta.owners || []
+  } catch { allTags = []; allOwners = [] }
+  renderOwnerFilter()
+  renderTagCloud()
+  renderPicker(uploadPicker)
+  renderPicker(editPicker)
+}
+
+function renderOwnerFilter() {
+  const sel = $('ownerFilter')
+  const prev = currentOwner || sel.value || ''
+  sel.innerHTML = '<option value="">全部上传者</option>' +
+    allOwners.map((o) => '<option value="' + escapeAttr(o) + '"' + (o === prev ? ' selected' : '') + '>' + escapeHtml(o) + '</option>').join('')
+  if (prev) sel.value = prev
+}
+
+function tagColor(tag) {
+  const palette = ['#f87171', '#fb923c', '#fbbf24', '#a3e635', '#34d399', '#2dd4bf', '#38bdf8', '#818cf8', '#c084fc', '#f472b6', '#fb7185', '#94a3b8']
+  let h = 0
+  for (let i = 0; i < tag.length; i++) h = (h * 31 + tag.charCodeAt(i)) >>> 0
+  return palette[h % palette.length]
+}
+
+function makeTagChip(tag, onClick) {
+  const c = tagColor(tag)
+  const s = document.createElement('span')
+  s.className = 'tag-chip' + (onClick ? ' clickable' : '')
+  s.style.background = c + '22'
+  s.style.color = c
+  s.style.borderColor = c + '44'
+  s.innerHTML = '<span class="dot"></span>' + escapeHtml(tag)
+  if (onClick) s.addEventListener('click', onClick)
+  return s
+}
+
+// ---- 标签选择器（复用现有标签 + 自由输入）----
+function renderPicker(p) {
+  const selBox = $(p.sel)
+  selBox.innerHTML = ''
+  p.tags.forEach((t) => {
+    const c = tagColor(t)
+    const chip = document.createElement('span')
+    chip.className = 'tag-chip'
+    chip.style.background = c + '22'
+    chip.style.color = c
+    chip.style.borderColor = c + '44'
+    chip.innerHTML = '<span class="dot"></span>' + escapeHtml(t) + '<span class="chip-x">×</span>'
+    chip.addEventListener('click', () => removePickerTag(p, t))
+    selBox.appendChild(chip)
+  })
+  const optBox = $(p.opts)
+  optBox.innerHTML = ''
+  if (allTags.length === 0) {
+    optBox.innerHTML = '<span class="muted">暂无现有标签，可直接在上方输入新标签</span>'
+  } else {
+    allTags.forEach(({ tag, count }) => {
+      const chip = makeTagChip(tag, () => addPickerTag(p, tag))
+      if (p.tags.includes(tag)) chip.classList.add('active')
+      const cnt = document.createElement('span')
+      cnt.className = 'tg-count'
+      cnt.textContent = count
+      chip.appendChild(cnt)
+      optBox.appendChild(chip)
+    })
+  }
+}
+
+function addPickerTag(p, tag) {
+  if (!p.tags.includes(tag)) p.tags.push(tag)
+  $(p.input).value = ''
+  renderPicker(p)
+}
+
+function removePickerTag(p, tag) {
+  const i = p.tags.indexOf(tag)
+  if (i >= 0) p.tags.splice(i, 1)
+  renderPicker(p)
+}
+
+function commitPickerInput(p) {
+  const raw = $(p.input).value.trim()
+  if (!raw) return
+  raw.split(/[,，;；\n]+/).forEach((t) => {
+    t = t.trim()
+    if (t && !p.tags.includes(t)) p.tags.push(t)
+  })
+  $(p.input).value = ''
+  renderPicker(p)
+}
+
+function resetPicker(p) {
+  p.tags = []
+  $(p.input).value = ''
+  renderPicker(p)
+}
+
+function renderTagCloud() {
+  const box = $('tagCloud')
+  box.innerHTML = ''
+  if (allTags.length === 0) {
+    box.innerHTML = '<span class="muted">暂无标签</span>'
+    return
+  }
+  const title = document.createElement('span')
+  title.className = 'tg-title'
+  title.textContent = '标签筛选：'
+  box.appendChild(title)
+  allTags.forEach(({ tag, count }) => {
+    const chip = makeTagChip(tag, () => toggleTagFilter(tag))
+    if (currentTags.includes(tag)) chip.classList.add('active')
+    const cnt = document.createElement('span')
+    cnt.className = 'tg-count'
+    cnt.textContent = count
+    chip.appendChild(cnt)
+    box.appendChild(chip)
+  })
+}
+
+function toggleTagFilter(tag) {
+  const i = currentTags.indexOf(tag)
+  if (i >= 0) currentTags.splice(i, 1)
+  else currentTags.push(tag)
+  currentPage = 1
+  refreshList()
+}
+
+function renderActiveFilters() {
+  const box = $('activeFilters')
+  box.innerHTML = ''
+  const parts = []
+  if (currentSearch) parts.push(['搜索', currentSearch, () => clearSearch()])
+  if (currentOwner) parts.push(['上传者', currentOwner, () => { $('ownerFilter').value = ''; applyFilter() }])
+  if (currentExt) parts.push(['类型', extLabel(currentExt), () => { $('extFilter').value = ''; applyFilter() }])
+  currentTags.forEach((t) => parts.push(['标签', t, () => toggleTagFilter(t)]))
+  if (parts.length === 0) { box.style.display = 'none'; return }
+  box.style.display = 'flex'
+  parts.forEach(([label, val, fn]) => {
+    const c = document.createElement('span')
+    c.className = 'af-chip'
+    c.innerHTML = '<span class="af-label">' + label + '：</span>' + escapeHtml(val) + ' <span class="af-x">✕</span>'
+    c.addEventListener('click', fn)
+    box.appendChild(c)
+  })
+}
+
+function extLabel(v) {
+  const map = { '.sh': 'Shell', '.py': 'Python', '.js': 'JavaScript', '.md': 'Markdown', '.json': 'JSON', '.txt': '文本', '.yml': 'YAML', '.sql': 'SQL', '.bat': '批处理', '.zip': '压缩包', '__other__': '其它' }
+  return map[v] || v
 }
 
 // ---- 文件列表 ----
@@ -380,57 +645,71 @@ async function refreshList() {
     if (currentSort) url += '&sortBy=' + currentSort.sortBy + '&order=' + currentSort.order
     if (currentOwner) url += '&owner=' + encodeURIComponent(currentOwner)
     if (currentExt) url += '&ext=' + encodeURIComponent(currentExt)
+    if (currentTags.length) url += '&tag=' + encodeURIComponent(currentTags.join(','))
     const data = await api(url)
     currentFiles = data.items
     const tbody = $('fileList')
     tbody.innerHTML = ''
     $('count').textContent = data.total
     if (data.items.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" style="color:#64748b">暂无文件</td></tr>'
+      tbody.innerHTML = '<tr><td colspan="7"><div class="empty">没有符合条件的文件，试试调整筛选或搜索条件</div></td></tr>'
       $('pagination').style.display = 'none'
-      return
+    } else {
+      data.items.forEach((f) => {
+        const tr = document.createElement('tr')
+        const isOwner = f.owner === currentUser.username
+        let badges = ''
+        if (isOwner) badges += '<span class="tag owner">我的</span>'
+        if (f.isPublic) badges += '<span class="tag public">公共</span>'
+        if (!isOwner && Array.isArray(f.sharedWith) && f.sharedWith.includes(currentUser.username)) badges += '<span class="tag shared">共享</span>'
+
+        let ops = ''
+        ops += '<a class="link" onclick="downloadFile(\'' + f.id + '\')">下载</a>'
+        ops += '<a class="link" onclick="previewFile(\'' + f.id + '\')">预览</a>'
+        ops += '<a class="link" onclick="openVersions(\'' + f.id + '\')">版本</a>'
+        if (isOwner || currentUser.role === 'admin') {
+          ops += '<a class="link" onclick="openAddVersion(\'' + f.id + '\')">新版本</a>'
+          ops += '<a class="link" onclick="openShare(\'' + f.id + '\')">共享</a>'
+          ops += '<a class="link" onclick="openEditInfo(\'' + f.id + '\')">编辑</a>'
+          ops += '<a class="link" onclick="openRename(\'' + f.id + '\')">重命名</a>'
+          ops += '<span class="danger" onclick="deleteFile(\'' + f.id + '\')">删除</span>'
+        }
+
+        const tdName = document.createElement('td')
+        tdName.innerHTML = escapeHtml(f.name) + badges
+        const tdDesc = document.createElement('td')
+        tdDesc.className = 'desc-cell'
+        tdDesc.innerHTML = f.description ? escapeHtml(f.description) : '<span style="color:var(--faint)">—</span>'
+        const tdTags = buildTagCell(f.tags)
+        const tdSize = document.createElement('td'); tdSize.textContent = formatSize(f.size)
+        const tdVer = document.createElement('td'); tdVer.textContent = 'v' + f.currentVersion
+        const tdTime = document.createElement('td'); tdTime.textContent = new Date(f.updatedAt).toLocaleString('zh-CN')
+        const tdOps = document.createElement('td'); tdOps.innerHTML = ops
+        tr.append(tdName, tdDesc, tdTags, tdSize, tdVer, tdTime, tdOps)
+        tbody.appendChild(tr)
+      })
+      const totalPages = Math.max(1, Math.ceil(data.total / PAGE_SIZE))
+      $('pageInfo').textContent = '第 ' + data.page + ' / ' + totalPages + ' 页'
+      $('pagination').style.display = data.total > PAGE_SIZE ? 'flex' : 'none'
     }
-    data.items.forEach((f) => {
-      const tr = document.createElement('tr')
-      const isOwner = f.owner === currentUser.username
-      let tags = ''
-      if (isOwner) tags += '<span class="tag owner">我的</span>'
-      if (f.isPublic) tags += '<span class="tag public">公共</span>'
-      if (!isOwner && Array.isArray(f.sharedWith) && f.sharedWith.includes(currentUser.username)) tags += '<span class="tag shared">共享</span>'
-
-      let ops = ''
-      ops += '<a class="link" onclick="downloadFile(\'' + f.id + '\')">下载</a>'
-      ops += '<a class="link" onclick="previewFile(\'' + f.id + '\')">预览</a>'
-      ops += '<a class="link" onclick="openVersions(\'' + f.id + '\',\'' + escapeAttr(f.name) + '\')">版本</a>'
-      if (isOwner || currentUser.role === 'admin') {
-        ops += '<a class="link" onclick="openAddVersion(\'' + f.id + '\')">新版本</a>'
-        ops += '<a class="link" onclick="openShare(\'' + f.id + '\')">共享</a>'
-        ops += '<a class="link" onclick="openEditDesc(\'' + f.id + '\',\'' + escapeAttr(f.description || '') + '\')">简介</a>'
-        ops += '<a class="link" onclick="openRename(\'' + f.id + '\',\'' + escapeAttr(f.name) + '\')">重命名</a>'
-        ops += '<span class="danger" onclick="deleteFile(\'' + f.id + '\')">删除</span>'
-      }
-      const desc = f.description ? escapeHtml(f.description) : '<span style="color:#94a3b8">—</span>'
-      tr.innerHTML =
-        '<td>' + escapeHtml(f.name) + tags + '</td>' +
-        '<td class="desc-cell">' + desc + '</td>' +
-        '<td>' + formatSize(f.size) + '</td>' +
-        '<td>v' + f.currentVersion + '</td>' +
-        '<td>' + new Date(f.updatedAt).toLocaleString('zh-CN') + '</td>' +
-        '<td>' + ops + '</td>'
-      tbody.appendChild(tr)
-    })
-
-    // 动态填充上传者筛选下拉框（保留当前选中值）
-    const ownerSel = $('ownerFilter')
-    const prevOwner = ownerSel.value
-    const owners = [...new Set(data.items.map((f) => f.owner))].sort()
-    ownerSel.innerHTML = '<option value="">全部上传者</option>' + owners.map((o) => '<option value="' + escapeAttr(o) + '">' + escapeHtml(o) + '</option>').join('')
-    if (owners.includes(prevOwner)) ownerSel.value = prevOwner
-
-    const totalPages = Math.max(1, Math.ceil(data.total / PAGE_SIZE))
-    $('pageInfo').textContent = '第 ' + data.page + ' / ' + totalPages + ' 页'
-    $('pagination').style.display = data.total > PAGE_SIZE ? 'flex' : 'none'
+    renderTagCloud()
+    renderActiveFilters()
   } catch (e) { showAlert(e.message) }
+}
+
+function buildTagCell(tags) {
+  const td = document.createElement('td')
+  td.className = 'tag-cell'
+  if (!Array.isArray(tags) || tags.length === 0) {
+    td.innerHTML = '<span style="color:var(--faint)">—</span>'
+    return td
+  }
+  tags.forEach((t) => {
+    const chip = makeTagChip(t, () => toggleTagFilter(t))
+    if (currentTags.includes(t)) chip.classList.add('active')
+    td.appendChild(chip)
+  })
+  return td
 }
 
 function changePage(delta) {
@@ -477,6 +756,7 @@ async function uploadFile() {
   formData.append('file', file)
   const description = $('fileDesc').value.trim()
   if (description) formData.append('description', description)
+  if (uploadPicker.tags.length) formData.append('tags', uploadPicker.tags.join(','))
 
   try {
     const res = await fetch('/api/files', {
@@ -488,8 +768,10 @@ async function uploadFile() {
     if (!res.ok) throw new Error(data.message || 'HTTP ' + res.status)
     fileInput.value = ''
     $('fileDesc').value = ''
+    resetPicker(uploadPicker)
     showAlert('上传成功：' + data.name, 'ok')
     refreshList()
+    loadMeta()
   } catch (e) { showAlert(e.message) }
 }
 
@@ -525,7 +807,6 @@ async function downloadFile(id) {
 
 // ---- 在线预览（文本类） ----
 async function previewFile(id) {
-  // 直接下载当前版本并尝试以文本预览
   try {
     const res = await fetch('/api/files/download/' + id, { headers: { Authorization: 'Bearer ' + TOKEN } })
     if (!res.ok) {
@@ -545,17 +826,13 @@ async function previewFile(id) {
 }
 
 // ---- 版本管理 ----
-async function openVersions(id, name) {
+async function openVersions(id) {
   try {
+    const f = currentFiles.find((x) => String(x.id) === String(id)) || {}
+    const currentVer = f.currentVersion ?? null
     const versions = await api('/files/' + id + '/versions')
-    // 获取文件当前版本号（用于标记当前版本）
-    const fileInfo = await api('/files?q=' + encodeURIComponent(name) + '&pageSize=100')
-    let currentVer = null
-    const found = fileInfo.items.find(f => f.id === id)
-    if (found) currentVer = found.currentVersion
-
     currentFileId = id
-    $('versionModalTitle').textContent = '版本历史：' + name
+    $('versionModalTitle').textContent = '版本历史：' + (f.name || '')
     const list = $('versionList')
     list.innerHTML = ''
     if (versions.length === 0) {
@@ -611,9 +888,7 @@ function askDeleteVersion(version) {
   pendingConfirm = async () => {
     await api('/files/' + currentFileId + '/versions/' + version, { method: 'DELETE' })
     showAlert('已删除版本 v' + version, 'ok')
-    // 重新加载版本历史
-    const name = $('versionModalTitle').textContent.replace('版本历史：', '')
-    openVersions(currentFileId, name)
+    openVersions(currentFileId)
     refreshList()
   }
   $('confirmTitle').textContent = '删除版本 v' + version
@@ -678,7 +953,7 @@ async function openShare(id) {
       return
     }
     users.forEach((u) => {
-      if (u.username === currentUser.username) return // 不显示自己
+      if (u.username === currentUser.username) return
       const checked = sharedWith.includes(u.username) ? 'checked' : ''
       const roleCls = u.role === 'admin' ? 'admin' : ''
       const roleTag = u.role === 'admin' ? '管理员' : '成员'
@@ -704,13 +979,15 @@ async function submitShare() {
     closeModal('shareModal')
     showAlert('共享设置已保存', 'ok')
     refreshList()
+    loadMeta()
   } catch (e) { showAlert(e.message) }
 }
 
 // ---- 重命名 ----
-function openRename(id, name) {
+function openRename(id) {
   currentFileId = id
-  $('renameInput').value = name
+  const f = currentFiles.find((x) => String(x.id) === String(id)) || {}
+  $('renameInput').value = f.name || ''
   openModal('renameModal')
 }
 
@@ -725,20 +1002,25 @@ async function submitRename() {
   } catch (e) { showAlert(e.message) }
 }
 
-// ---- 编辑简介 ----
-function openEditDesc(id, desc) {
+// ---- 编辑信息（简介 + 标签） ----
+function openEditInfo(id) {
   currentFileId = id
-  $('editDescInput').value = desc || ''
+  const f = currentFiles.find((x) => String(x.id) === String(id)) || {}
+  $('editDescInput').value = f.description || ''
+  editPicker.tags = (f.tags || []).slice()
+  renderPicker(editPicker)
   openModal('editDescModal')
 }
 
-async function submitEditDesc() {
+async function submitEditInfo() {
   const description = $('editDescInput').value.trim()
+  const tags = editPicker.tags.join(',')
   try {
-    await api('/files/' + currentFileId, { method: 'PATCH', body: JSON.stringify({ description }) })
+    await api('/files/' + currentFileId, { method: 'PATCH', body: JSON.stringify({ description, tags }) })
     closeModal('editDescModal')
-    showAlert('简介已更新', 'ok')
+    showAlert('文件信息已更新', 'ok')
     refreshList()
+    loadMeta()
   } catch (e) { showAlert(e.message) }
 }
 
@@ -748,6 +1030,7 @@ function deleteFile(id) {
     await api('/files/' + id, { method: 'DELETE' })
     showAlert('已删除', 'ok')
     refreshList()
+    loadMeta()
   }
   $('confirmTitle').textContent = '删除文件'
   $('confirmMessage').textContent = '确定要删除该文件吗？该文件的所有版本都会被永久删除，无法恢复。'
@@ -847,6 +1130,38 @@ document.querySelectorAll('.modal-mask').forEach((m) => {
   m.addEventListener('click', (e) => { if (e.target === m) m.style.display = 'none' })
 })
 
+// 实时搜索（防抖 300ms）
+$('searchInput').addEventListener('input', () => {
+  clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => doSearch(), 300)
+})
+
+// 回车立即搜索
+$('searchInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault()
+    clearTimeout(searchTimer)
+    doSearch()
+  }
+})
+
+// 标签选择器：回车或失焦时提交输入
+;[uploadPicker, editPicker].forEach((p) => {
+  const inp = $(p.input)
+  inp.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); commitPickerInput(p) }
+  })
+  inp.addEventListener('blur', () => commitPickerInput(p))
+})
+
+// Ctrl+K 聚焦搜索框
+document.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+    e.preventDefault()
+    if ($('appView').style.display !== 'none') $('searchInput').focus()
+  }
+})
+
 // ---- 初始化 ----
 if (TOKEN) {
   $('loginView').style.display = 'none'
@@ -858,6 +1173,7 @@ if (TOKEN) {
     $('adminBtn').style.display = payload.role === 'admin' ? 'inline-block' : 'none'
   } catch {}
   refreshList().catch(() => { logout() })
+  loadMeta()
 }
 </script>
 </body>

@@ -23,7 +23,7 @@ export class FilesController {
     this.service = service
   }
 
-  /** GET /api/files?page=1&pageSize=20&q=关键词&sortBy=updatedAt&order=desc&owner=xxx&ext=.sh */
+  /** GET /api/files?page=1&pageSize=20&q=关键词&sortBy=updatedAt&order=desc&owner=xxx&ext=.sh&tag=部署,运维（多选，逗号分隔） */
   async list(req, res) {
     try {
       const url = new URL(req.url, `http://${req.headers.host}`)
@@ -34,7 +34,19 @@ export class FilesController {
       const order = url.searchParams.get('order') || 'desc'
       const owner = url.searchParams.get('owner') || ''
       const ext = url.searchParams.get('ext') || ''
-      const result = this.service.list(req.user.username, { page, pageSize, q, sortBy, order, owner, ext })
+      const tagRaw = url.searchParams.get('tag') || ''
+      const tags = tagRaw.split(',').map((t) => t.trim()).filter(Boolean)
+      const result = this.service.list(req.user.username, { page, pageSize, q, sortBy, order, owner, ext, tags })
+      sendJSON(res, 200, result)
+    } catch (err) {
+      sendError(res, err.status || 500, err.message, err.code)
+    }
+  }
+
+  /** GET /api/files/meta — 标签与上传者聚合（供前端筛选） */
+  async listMeta(req, res) {
+    try {
+      const result = this.service.listMeta(req.user.username)
       sendJSON(res, 200, result)
     } catch (err) {
       sendError(res, err.status || 500, err.message, err.code)
@@ -62,6 +74,7 @@ export class FilesController {
           content: file.data,
           contentType: file.contentType || 'application/octet-stream',
           description: parsed.fields?.description,
+          tags: parsed.fields?.tags,
         })
       } else {
         // JSON：文本上传
@@ -72,6 +85,7 @@ export class FilesController {
           content: body?.content,
           contentType: 'text/plain; charset=utf-8',
           description: body?.description,
+          tags: body?.tags,
         })
       }
 
@@ -219,6 +233,7 @@ export class FilesController {
       const item = await this.service.update(req.params.id, req.user.username, {
         name: body?.name,
         description: body?.description,
+        tags: body?.tags,
       }, req.user.role)
       const action = body?.name !== undefined ? 'rename' : 'update_desc'
       audit(req.user.username, action, item.name, `id=${item.id}`)

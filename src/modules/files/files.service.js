@@ -15,16 +15,56 @@ import { config } from '../../config.js'
 // 规范：不允许的非法字符，防止路径穿越（安全）
 const ILLEGAL = /[\/\\:*?"<>|\x00-\x1f]/
 
+// 标签上限
+const MAX_TAGS = 10
+const MAX_TAG_LEN = 24
+
+/**
+ * 规范化标签输入：
+ *   - 接受数组或字符串（支持逗号 / 中文逗号 / 分号 / 换行分隔）
+ *   - 去空白、去重、截断长度、限制数量
+ * @param {Array|string|undefined} tags
+ * @returns {string[]}
+ */
+function normalizeTags(tags) {
+  if (tags === undefined || tags === null) return []
+  let arr
+  if (Array.isArray(tags)) {
+    arr = tags
+  } else if (typeof tags === 'string') {
+    arr = tags.split(/[,，;；\n]+/)
+  } else {
+    return []
+  }
+  const seen = new Set()
+  const out = []
+  for (let raw of arr) {
+    let t = String(raw).trim()
+    if (!t) continue
+    if (t.length > MAX_TAG_LEN) t = t.slice(0, MAX_TAG_LEN)
+    if (seen.has(t)) continue
+    seen.add(t)
+    out.push(t)
+    if (out.length >= MAX_TAGS) break
+  }
+  return out
+}
+
 export class FileService {
   constructor(repo = new FileRepo()) {
     this.repo = repo
   }
 
   /** 列出用户可访问的文件（自己的 + 共享的 + 公共的），支持分页、搜索、排序、筛选 */
-  list(username, { page = 1, pageSize = config.pageSize, q = '', sortBy = 'updatedAt', order = 'desc', owner = '', ext = '' } = {}) {
+  list(username, { page = 1, pageSize = config.pageSize, q = '', sortBy = 'updatedAt', order = 'desc', owner = '', ext = '', tags = [] } = {}) {
     const safePage = Math.max(1, Number(page) || 1)
     const safeSize = Math.min(100, Math.max(1, Number(pageSize) || config.pageSize))
-    return this.repo.list(username, { page: safePage, pageSize: safeSize, q, sortBy, order, owner, ext })
+    return this.repo.list(username, { page: safePage, pageSize: safeSize, q, sortBy, order, owner, ext, tags })
+  }
+
+  /** 标签与上传者聚合（供前端筛选） */
+  listMeta(username) {
+    return this.repo.listMeta(username)
   }
 
   /** 获取元数据并校验访问权限（owner 或共享或公共；admin 可读所有） */
@@ -54,7 +94,7 @@ export class FileService {
   }
 
   /** 创建文件：校验业务规则 → 交给 repo 落盘（支持文本 string 和二进制 Buffer） */
-  async create({ owner, name, content, contentType, description }) {
+  async create({ owner, name, content, contentType, description, tags }) {
     if (!name || name.trim().length === 0) throw new AppError(400, '文件名不能为空', 'INVALID_INPUT')
     if (name.length > 128) throw new AppError(400, '文件名过长', 'INVALID_INPUT')
     if (ILLEGAL.test(name)) throw new AppError(400, '文件名含有非法字符', 'INVALID_INPUT')
@@ -70,8 +110,10 @@ export class FileService {
 
     // 简介可选，限制长度
     const safeDesc = description ? String(description).trim().slice(0, 500) : ''
+    // 标签规范化
+    const safeTags = normalizeTags(tags)
 
-    return this.repo.create({ owner, name, content, contentType, description: safeDesc })
+    return this.repo.create({ owner, name, content, contentType, description: safeDesc, tags: safeTags })
   }
 
   /** 新增版本（owner 才能操作） */
@@ -130,8 +172,8 @@ export class FileService {
     return result
   }
 
-  /** 更新文件元数据：重命名 / 修改简介（owner 才能操作） */
-  async update(id, owner, { name, description } = {}, role) {
+  /** 更新文件元数据：重命名 / 修改简介 / 修改标签（owner 才能操作） */
+  async update(id, owner, { name, description, tags } = {}, role) {
     const item = this.get(id, owner)
     this._requireOwner(item, owner, role)
 
@@ -148,7 +190,13 @@ export class FileService {
       safeDesc = description ? String(description).trim().slice(0, 500) : ''
     }
 
-    return this.repo.update(id, { name, description: safeDesc })
+    // 标签规范化
+    let safeTags
+    if (tags !== undefined) {
+      safeTags = normalizeTags(tags)
+    }
+
+    return this.repo.update(id, { name, description: safeDesc, tags: safeTags })
   }
 
   /** 设置共享人列表（owner 才能操作） */

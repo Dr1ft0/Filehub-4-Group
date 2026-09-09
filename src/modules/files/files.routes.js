@@ -21,6 +21,11 @@ export function filesRoutes() {
       handler: (req, res) => controller.list(req, res),
     },
     {
+      method: 'GET',
+      path: '/api/files/meta',
+      handler: (req, res) => controller.listMeta(req, res),
+    },
+    {
       method: 'POST',
       path: '/api/files',
       handler: (req, res) => controller.create(req, res),

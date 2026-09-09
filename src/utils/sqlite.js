@@ -64,6 +64,7 @@ function initSchema(db) {
       isPublic       INTEGER NOT NULL DEFAULT 0,   -- 0 | 1
       sharedWith     TEXT NOT NULL DEFAULT '[]',   -- JSON 数组
       description    TEXT,                          -- 文件简介（可空）
+      tags           TEXT NOT NULL DEFAULT '[]',    -- 标签 JSON 数组（用于快速分辨脚本用途）
       createdAt      TEXT NOT NULL,
       updatedAt      TEXT NOT NULL,
       FOREIGN KEY (owner) REFERENCES users(username)
@@ -109,10 +110,16 @@ function initSchema(db) {
  */
 function migrateSchema(db) {
   const cols = db.prepare('PRAGMA table_info(files)').all()
-  const hasDescription = cols.some((c) => c.name === 'description')
-  if (!hasDescription) {
-    db.exec('ALTER TABLE files ADD COLUMN description TEXT')
-    logger.info('[SQLite] 已为 files 表新增 description 字段')
+  const colNames = new Set(cols.map((c) => c.name))
+  const additions = [
+    ['description', 'ALTER TABLE files ADD COLUMN description TEXT'],
+    ['tags', "ALTER TABLE files ADD COLUMN tags TEXT NOT NULL DEFAULT '[]'"],
+  ]
+  for (const [name, sql] of additions) {
+    if (!colNames.has(name)) {
+      db.exec(sql)
+      logger.info(`[SQLite] 已为 files 表新增 ${name} 字段`)
+    }
   }
 }
 

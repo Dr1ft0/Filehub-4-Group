@@ -1,57 +1,69 @@
 @echo off
 REM ============================================
-REM  è„šæœ¬ä»™äºº å°ç»„è„šæœ¬å…±äº«ç³»ç»Ÿ - å¯åŠ¨è„šæœ¬
-REM  åå°å¸¸é©»è¿è¡Œï¼Œæ—¥å¿—å†™å…¥ data\server.log
-REM  è¿›ç¨‹ PID è®°å½•åœ¨ data\server.pid
+REM  ½Å±¾ÏÉÈË Ğ¡×é½Å±¾¹²ÏíÏµÍ³ - Æô¶¯½Å±¾
+REM  ºóÌ¨³£×¤ÔËĞĞ£¬ÈÕÖ¾Ğ´Èë data\server.log
+REM  ½ø³Ì PID ¼ÇÂ¼ÔÚ data\server.pid
 REM ============================================
 setlocal
 cd /d "%~dp0"
 
-echo æ­£åœ¨å¯åŠ¨ FileHub æœåŠ¡...
+echo ÕıÔÚÆô¶¯ FileHub ·şÎñ...
 
-REM ç¡®ä¿ data ç›®å½•å­˜åœ¨ï¼ˆæ—¥å¿—ã€PID æ–‡ä»¶éƒ½æ”¾è¿™é‡Œï¼‰
+REM È·±£ data Ä¿Â¼´æÔÚ£¨ÈÕÖ¾¡¢PID ÎÄ¼ş¶¼·ÅÕâÀï£©
 if not exist "data" mkdir "data"
 
-REM æ£€æŸ¥æ˜¯å¦å·²åœ¨è¿è¡Œï¼ˆé€šè¿‡ PID æ–‡ä»¶ï¼‰
 set PID_FILE=data\server.pid
-if exist "%PID_FILE%" (
-  set /p OLD_PID=<"%PID_FILE%"
-  tasklist /FI "PID eq %OLD_PID%" 2>nul | find /i "%OLD_PID%" >nul
-  if not errorlevel 1 (
-    echo [æç¤º] FileHub æœåŠ¡å·²åœ¨è¿è¡Œï¼ˆPID: %OLD_PID%ï¼‰ã€‚
-    echo        å¦‚éœ€é‡å¯ï¼Œè¯·å…ˆè¿è¡Œ stop.bat
-    echo.
-    pause
-    exit /b 0
-  )
-  REM PID æ–‡ä»¶å­˜åœ¨ä½†è¿›ç¨‹å·²ä¸å­˜åœ¨ï¼Œæ¸…ç†æ®‹ç•™
+
+REM ---- ¼ì²éÊÇ·ñÒÑÔÚÔËĞĞ£¨Í¨¹ı PID ÎÄ¼ş + ½ø³Ì´æ»îĞ£Ñé£©----
+if not exist "%PID_FILE%" goto launch
+
+set /p OLD_PID=<"%PID_FILE%"
+powershell -NoProfile -Command "if (Get-Process -Id %OLD_PID% -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }"
+if errorlevel 1 (
+  REM PID ÎÄ¼ş´æÔÚµ«½ø³ÌÒÑ²»´æÔÚ£¬ÇåÀí²ĞÁôºó¼ÌĞøÆô¶¯
   del "%PID_FILE%" >nul 2>&1
+  goto launch
 )
 
-REM åå°å¯åŠ¨ï¼ˆstart /b ä¸å¼¹æ–°çª—å£ï¼Œç»§æ‰¿å½“å‰å·¥ä½œç›®å½•ï¼‰
-start /b "" cmd /c "node server.js >> data\server.log 2>&1"
+echo [ÌáÊ¾] FileHub ·şÎñÒÑÔÚÔËĞĞ£¨PID: %OLD_PID%£©¡£
+echo        ÈçĞèÖØÆô£¬ÇëÏÈÔËĞĞ stop.bat
+echo.
+pause
+exit /b 0
 
-REM ç­‰å¾…è¿›ç¨‹å¯åŠ¨å¹¶å†™å…¥ PID æ–‡ä»¶
+:launch
+REM ---- ·ÅĞĞ·À»ğÇ½ 3000 ¶Ë¿Ú£¨Ğè¹ÜÀíÔ±È¨ÏŞ£¬Ê§°ÜÔòºöÂÔ£©----
+netsh advfirewall firewall add rule name="FileHub-3000" dir=in action=allow protocol=TCP localport=3000 >nul 2>&1
+
+REM ---- Æô¶¯£ºÍêÈ«·ÖÀëµÄºóÌ¨½ø³Ì£¨ÎŞ´°¿Ú£©£¬¹Ø±Õ±¾´°¿Ú²»Ó°Ïì·şÎñ ----
+powershell -NoProfile -Command "Start-Process -FilePath 'node' -ArgumentList 'server.js' -WorkingDirectory '%~dp0' -WindowStyle Hidden"
+
+REM ---- µÈ´ı½ø³ÌÆô¶¯²¢Ğ´Èë PID ÎÄ¼ş ----
 set /a WAIT=0
 :waitloop
 if exist "%PID_FILE%" goto pidok
 set /a WAIT+=1
-if %WAIT% GEQ 20 goto pidtimeout
+if %WAIT% GEQ 30 goto pidtimeout
 ping -n 2 127.0.0.1 >nul
 goto waitloop
 
 :pidtimeout
-echo [è­¦å‘Š] æœªèƒ½è·å–è¿›ç¨‹ PIDï¼Œè¯·æ£€æŸ¥ data\server.log ç¡®è®¤å¯åŠ¨æ˜¯å¦æˆåŠŸã€‚
+echo [¾¯¸æ] Î´ÄÜ»ñÈ¡½ø³Ì PID£¬Çë¼ì²é data\server.log È·ÈÏÆô¶¯ÊÇ·ñ³É¹¦¡£
 goto done
 
 :pidok
 set /p NEW_PID=<"%PID_FILE%"
+
+REM ---- ×Ô¶¯¼ì²âµ±Ç°ÄÚÍø IP£¨DHCP ¶¯Ì¬·ÖÅä£¬Ã¿´ÎÆô¶¯ÊµÊ±»ñÈ¡£©----
+for /f "delims=" %%i in ('powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0get-lan-ip.ps1"') do set LAN_IP=%%i
+if not defined LAN_IP set LAN_IP=127.0.0.1
+
 echo.
-echo FileHub æœåŠ¡å·²åå°å¯åŠ¨ï¼
-echo   è¿›ç¨‹ PID: %NEW_PID%
-echo   è®¿é—®åœ°å€: http://<æœ¬æœºå†…ç½‘IP>:3000/
-echo   æŸ¥çœ‹æ—¥å¿—: data\server.log
-echo   åœæ­¢æœåŠ¡: è¿è¡Œ stop.bat
+echo FileHub ·şÎñÒÑºóÌ¨Æô¶¯£¡
+echo   ½ø³Ì PID: %NEW_PID%
+echo   ·ÃÎÊµØÖ·: http://%LAN_IP%:3000/
+echo   ²é¿´ÈÕÖ¾: data\server.log£¨¼° data\logs\ °´ÌìÈÕÖ¾£©
+echo   Í£Ö¹·şÎñ: ÔËĞĞ stop.bat
 echo.
 
 :done

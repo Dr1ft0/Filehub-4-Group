@@ -58,7 +58,9 @@ backup.bat
 | 上传 | 支持文本/脚本（JSON）和任意文件（multipart/form-data） |
 | 下载 | 流式下载，正确文件名和 MIME |
 | 在线预览 | 文本类文件直接预览 |
-| 搜索 | 按文件名模糊搜索 |
+| 搜索 | 按文件名 / 简介 / 标签 模糊搜索，实时搜索 + 回车搜索 |
+| 标签 | 上传/编辑时打标签，列表彩色标签云，点击标签一键筛选 |
+| 筛选 | 按上传者 / 文件类型 / 标签 组合筛选，按名称/时间/大小排序 |
 | 重命名 | 修改文件名 |
 | 删除 | 删除文件（含所有版本） |
 
@@ -240,12 +242,13 @@ POST /api/auth/register     body: {username, password}  → {username, role}
 GET  /api/health            返回状态、磁盘、文件数、用户数
 
 # 文件
-GET  /api/files?page=1&pageSize=20&q=关键词   列出可访问文件（分页+搜索）
+GET  /api/files?page=1&pageSize=20&q=关键词&owner=xxx&ext=.sh&tag=部署   列出可访问文件（分页+搜索+筛选）
+GET  /api/files/meta        标签与上传者聚合（供筛选下拉框/标签云）
 POST /api/files             上传文件，支持两种方式：
                             - JSON:  body: {name, content}（文本/脚本）
                             - multipart/form-data: 字段 file（任意二进制文件）
 GET  /api/files/download/:id 下载当前版本（流式）
-PATCH /api/files/:id         body: {name}  重命名
+PATCH /api/files/:id         body: {name|description|tags}  重命名 / 改简介 / 改标签
 DELETE /api/files/:id       删除文件（含所有版本）
 
 # 版本管理

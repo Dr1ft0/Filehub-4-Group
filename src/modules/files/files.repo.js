@@ -20,6 +20,17 @@ import { queryOne, queryAll, run, transaction } from '../../utils/sqlite.js'
 import { config } from '../../config.js'
 import { logger } from '../../utils/logger.js'
 
+/** 安全解析 JSON 数组字段（sharedWith / tags） */
+function safeParseArray(s) {
+  if (Array.isArray(s)) return s
+  try {
+    const v = JSON.parse(s || '[]')
+    return Array.isArray(v) ? v : []
+  } catch {
+    return []
+  }
+}
+
 export class FileRepo {
   constructor() {
     // 确保上传目录存在
@@ -41,9 +52,9 @@ export class FileRepo {
   /**
    * 列出用户可访问的文件（自己的 + 共享给我的 + 公共的），支持分页和搜索
    * @param {string} username 当前用户
-   * @param {object} opts { page, pageSize, q }
+   * @param {object} opts { page, pageSize, q, sortBy, order, owner, ext, tags }
    */
-  list(username, { page = 1, pageSize = config.pageSize, q = '', sortBy = 'updatedAt', order = 'desc', owner = '', ext = '' } = {}) {
+  list(username, { page = 1, pageSize = config.pageSize, q = '', sortBy = 'updatedAt', order = 'desc', owner = '', ext = '', tags = [] } = {}) {
     const where = []
     const params = []
 
@@ -51,16 +62,23 @@ export class FileRepo {
     where.push(`(owner = ? OR isPublic = 1 OR sharedWith LIKE ?)`)
     params.push(username, `%"${username}"%`)
 
-    // 搜索（文件名 + 简介模糊）
+    // 搜索（文件名 + 简介 + 标签 模糊）
     if (q) {
-      where.push('(name LIKE ? OR description LIKE ?)')
-      params.push(`%${q}%`, `%${q}%`)
+      where.push('(name LIKE ? OR description LIKE ? OR tags LIKE ?)')
+      params.push(`%${q}%`, `%${q}%`, `%${q}%`)
     }
 
     // 按上传者筛选
     if (owner) {
       where.push('owner = ?')
       params.push(owner)
+    }
+
+    // 按标签筛选（多选：命中任一标签即匹配）
+    if (Array.isArray(tags) && tags.length) {
+      const orClauses = tags.map(() => 'tags LIKE ?').join(' OR ')
+      where.push(`(${orClauses})`)
+      tags.forEach((t) => params.push(`%"${t}"%`))
     }
 
     // 按文件后缀筛选（如 .sh / .py / .md）
@@ -95,7 +113,7 @@ export class FileRepo {
 
     const offset = (page - 1) * pageSize
     const items = queryAll(
-      `SELECT id, owner, name, size, contentType, currentVersion, isPublic, sharedWith, description, createdAt, updatedAt
+      `SELECT id, owner, name, size, contentType, currentVersion, isPublic, sharedWith, description, tags, createdAt, updatedAt
        FROM files WHERE ${whereSql}
        ORDER BY ${sortCol} ${sortOrder} LIMIT ? OFFSET ?`,
       ...params,
@@ -103,19 +121,42 @@ export class FileRepo {
       offset
     )
 
-    // 解析 sharedWith JSON
-    const parsed = items.map((i) => ({ ...i, isPublic: !!i.isPublic, sharedWith: JSON.parse(i.sharedWith || '[]') }))
+    // 解析 sharedWith / tags JSON
+    const parsed = items.map((i) => ({ ...i, isPublic: !!i.isPublic, sharedWith: safeParseArray(i.sharedWith), tags: safeParseArray(i.tags) }))
     return { items: parsed, total, page, pageSize }
   }
 
   get(id) {
     const row = queryOne('SELECT * FROM files WHERE id = ?', id)
     if (!row) return null
-    return { ...row, isPublic: !!row.isPublic, sharedWith: JSON.parse(row.sharedWith || '[]') }
+    return { ...row, isPublic: !!row.isPublic, sharedWith: safeParseArray(row.sharedWith), tags: safeParseArray(row.tags) }
+  }
+
+  /** 标签与上传者聚合（供前端筛选下拉框 / 标签云使用） */
+  listMeta(username) {
+    const rows = queryAll(
+      'SELECT owner, tags FROM files WHERE (owner = ? OR isPublic = 1 OR sharedWith LIKE ?)',
+      username,
+      `%"${username}"%`
+    )
+    const tagCounts = new Map()
+    const owners = new Set()
+    for (const r of rows) {
+      owners.add(r.owner)
+      for (const t of safeParseArray(r.tags)) {
+        tagCounts.set(t, (tagCounts.get(t) || 0) + 1)
+      }
+    }
+    return {
+      tags: [...tagCounts.entries()]
+        .map(([tag, count]) => ({ tag, count }))
+        .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag, 'zh-CN')),
+      owners: [...owners].sort((a, b) => a.localeCompare(b, 'zh-CN')),
+    }
   }
 
   /** 创建文件（首个版本） */
-  async create({ owner, name, content, contentType, description }) {
+  async create({ owner, name, content, contentType, description, tags }) {
     const id = randomUUID()
     const now = new Date().toISOString()
     const buf = Buffer.isBuffer(content) ? content : Buffer.from(content, 'utf8')
@@ -127,9 +168,9 @@ export class FileRepo {
     // 元数据 + 版本记录（事务）
     transaction((db) => {
       db.prepare(
-        `INSERT INTO files (id, owner, name, size, contentType, currentVersion, isPublic, sharedWith, description, createdAt, updatedAt)
-         VALUES (?, ?, ?, ?, ?, 1, 0, '[]', ?, ?, ?)`
-      ).run(id, owner, name, buf.length, contentType, description || null, now, now)
+        `INSERT INTO files (id, owner, name, size, contentType, currentVersion, isPublic, sharedWith, description, tags, createdAt, updatedAt)
+         VALUES (?, ?, ?, ?, ?, 1, 0, '[]', ?, ?, ?, ?)`
+      ).run(id, owner, name, buf.length, contentType, description || null, JSON.stringify(tags || []), now, now)
 
       db.prepare(
         `INSERT INTO file_versions (id, fileId, version, size, updatedBy, changeNote, createdAt)
@@ -248,14 +289,15 @@ export class FileRepo {
     return this.get(id)
   }
 
-  /** 更新文件元数据（重命名 / 修改简介） */
-  async update(id, { name, description } = {}) {
+  /** 更新文件元数据（重命名 / 修改简介 / 修改标签） */
+  async update(id, { name, description, tags } = {}) {
     const file = this.get(id)
     if (!file) return null
     const now = new Date().toISOString()
     const newName = name !== undefined ? name : file.name
     const newDesc = description !== undefined ? description : file.description
-    run('UPDATE files SET name = ?, description = ?, updatedAt = ? WHERE id = ?', newName, newDesc, now, id)
+    const newTags = tags !== undefined ? tags : file.tags
+    run('UPDATE files SET name = ?, description = ?, tags = ?, updatedAt = ? WHERE id = ?', newName, newDesc, JSON.stringify(newTags), now, id)
     return this.get(id)
   }
 
