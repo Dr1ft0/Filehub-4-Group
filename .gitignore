@@ -13,3 +13,6 @@ Thumbs.db
 
 # 临时测试脚本
 test-*.mjs
+
+# 内部计划文档（隐私，不提交到 Git）
+plans/
